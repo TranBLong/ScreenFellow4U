@@ -79,7 +79,6 @@ flutter:
     - assets/images/mytrip/mytripcurrent/
     - assets/images/mytrip/mytripnext/
     - assets/images/mytrip/mytrippast/
-    - assets/images/mytrip/mytripwishlist/
     
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
