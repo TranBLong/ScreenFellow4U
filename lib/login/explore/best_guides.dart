@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../chooseaguide/guidepage/mainguidepage.dart';
 import 'package:ktck/seemore/guidesmore.dart';
+import 'package:ktck/models/guide.dart';
 
 class BestGuidesWidget extends StatelessWidget {
   const BestGuidesWidget({super.key});
@@ -83,7 +84,17 @@ class BestGuidesWidget extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const Mainguidepage()),
+          MaterialPageRoute(
+            builder: (context) => Mainguidepage(
+              guide: Guide(
+                name: name,
+                location: location,
+                image: image,
+                reviews: 127, // Default for now
+                description: 'Expert guide with extensive knowledge of $location.',
+              ),
+            ),
+          ),
         );
       },
       child: Column(

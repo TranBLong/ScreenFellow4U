@@ -38,11 +38,6 @@ class _MyTripsCurrentState extends State<MyTripsCurrent> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: const Color(0xFF00BFA5),
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
-      ),
       bottomNavigationBar: _buildBottomNav(),
     );
   }

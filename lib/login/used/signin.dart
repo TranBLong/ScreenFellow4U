@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'signup.dart';
 import 'forgotpassword.dart';
 import '../explore/explore.dart';
+import '../../api_service.dart';
 
 class SignIn extends StatefulWidget {
   const SignIn({super.key});
@@ -13,6 +14,76 @@ class SignIn extends StatefulWidget {
 
 class _SignInState extends State<SignIn> {
   String selectedRole = "Traveler";
+  bool isLoading = false;
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  Future<void> _handleSignIn() async {
+    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text("Please enter email and password"),
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(
+            bottom: MediaQuery.of(context).size.height - 100,
+            left: 20,
+            right: 20,
+          ),
+        ),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    final result = await ApiService.loginUser(
+      email: emailController.text,
+      password: passwordController.text,
+    );
+
+    setState(() => isLoading = false);
+
+    if (result['status'] == 'success') {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message']),
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(
+            bottom: MediaQuery.of(context).size.height - 100,
+            left: 20,
+            right: 20,
+          ),
+        ),
+      );
+      // ignore: use_build_context_synchronously
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Explore()),
+      );
+    } else {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message']),
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(
+            bottom: MediaQuery.of(context).size.height - 100,
+            left: 20,
+            right: 20,
+          ),
+        ),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -91,12 +162,15 @@ class _SignInState extends State<SignIn> {
                         const SizedBox(height: 20),
 
                         const Text("Email"),
-                        const TextField(),
+                        TextField(controller: emailController),
 
                         const SizedBox(height: 20),
 
                         const Text("Password"),
-                        const TextField(),
+                        TextField(
+                          controller: passwordController,
+                          obscureText: true,
+                        ),
                         GestureDetector(
                           onTap: () {
                             Navigator.push(
@@ -132,15 +206,10 @@ class _SignInState extends State<SignIn> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const Explore(),
-                                ),
-                              );
-                            },
-                            child: const Text("SIGN IN"),
+                            onPressed: isLoading ? null : _handleSignIn,
+                            child: isLoading
+                                ? const CircularProgressIndicator(color: Colors.white)
+                                : const Text("SIGN IN"),
                           ),
                         ),
 
@@ -148,13 +217,13 @@ class _SignInState extends State<SignIn> {
                         Center(
                           child: RichText(
                             textAlign: TextAlign.center,
-                            text: TextSpan(
-                              style: const TextStyle(
+                            text: const TextSpan(
+                              style: TextStyle(
                                 fontSize: 14,
                                 color: Color.fromARGB(255, 0, 0, 0),
                               ),
                               children: [
-                                const TextSpan(text: "or sign in with"),
+                                TextSpan(text: "or sign in with"),
                               ],
                             ),
                           ),

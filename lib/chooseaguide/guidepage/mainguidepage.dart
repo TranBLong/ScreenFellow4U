@@ -1,11 +1,14 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:ktck/chooseaguide/guidepage/myexperiences.dart';
 import 'package:ktck/chooseaguide/guidepage/reviews.dart';
 import 'package:ktck/login/explore/explore.dart';
+import 'package:ktck/models/guide.dart';
 import '../tripinformation.dart';
 
 class Mainguidepage extends StatelessWidget {
-  const Mainguidepage({super.key});
+  final Guide guide;
+
+  const Mainguidepage({super.key, required this.guide});
 
   @override
   Widget build(BuildContext context) {
@@ -52,10 +55,10 @@ class Mainguidepage extends StatelessWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 3),
-                        image: const DecorationImage(
-                          image: AssetImage(
-                            'assets/images/chooseaguide/main/Tuan Tran 2.png',
-                          ),
+                        image: DecorationImage(
+                          image: guide.image.startsWith('http')
+                              ? NetworkImage(guide.image)
+                              : AssetImage(guide.image) as ImageProvider,
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -79,8 +82,8 @@ class Mainguidepage extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Tuan Tran',
+                            Text(
+                              guide.name,
                               style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
@@ -98,8 +101,8 @@ class Mainguidepage extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(width: 6),
-                                const Text(
-                                  '127 Reviews',
+                                Text(
+                                  '${guide.reviews} Reviews',
                                   style: TextStyle(
                                     fontSize: 13,
                                     color: Colors.grey,
@@ -143,24 +146,22 @@ class Mainguidepage extends StatelessWidget {
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
-                    children: const [
-                      _LanguageChip(label: 'Vietnamese'),
-                      _LanguageChip(label: 'English'),
-                      _LanguageChip(label: 'Korean'),
-                    ],
+                    children: guide.languages
+                        .map((lang) => _LanguageChip(label: lang))
+                        .toList(),
                   ),
                   const SizedBox(height: 10),
                   Row(
-                    children: const [
-                      Icon(
+                    children: [
+                      const Icon(
                         Icons.location_on,
                         color: Color(0xFF00BFA5),
                         size: 16,
                       ),
-                      SizedBox(width: 4),
+                      const SizedBox(width: 4),
                       Text(
-                        'Danang, Vietnam',
-                        style: TextStyle(
+                        guide.location,
+                        style: const TextStyle(
                           color: Color(0xFF00BFA5),
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
@@ -174,10 +175,8 @@ class Mainguidepage extends StatelessWidget {
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Lorem Ipsum is simply dummy text of the printing and typesetting industry. '
-                    'Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, '
-                    'when an unknown printer took a galley of type and scrambled it to make a type specimen book.',
+                  Text(
+                    guide.description,
                     style: TextStyle(
                       fontSize: 13.5,
                       color: Colors.black87,

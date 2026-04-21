@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:ktck/chooseaguide/guidepage/mainguidepage.dart';
+import 'package:ktck/models/guide.dart';
 
 class GuidesMoreScreen extends StatefulWidget {
   const GuidesMoreScreen({super.key});
@@ -272,7 +274,22 @@ class _GuideCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        // TODO: navigate to guide detail
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Mainguidepage(
+              guide: Guide(
+                name: guide['name'],
+                location: guide['location'],
+                image: guide['image'],
+                rating: guide['rating'],
+                reviews: guide['reviews'],
+                description:
+                    'Professional guide based in ${guide['location']}. Committed to providing the best travel experience.',
+              ),
+            ),
+          ),
+        );
       },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
