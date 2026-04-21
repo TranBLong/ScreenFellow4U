@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ktck/tourdetail/tourdetail.dart';
 import 'package:ktck/seemore/toursmore.dart';
+import 'package:ktck/api_service.dart';
 
 class FeaturedToursWidget extends StatefulWidget {
   const FeaturedToursWidget({super.key});
@@ -10,11 +11,69 @@ class FeaturedToursWidget extends StatefulWidget {
 }
 
 class _FeaturedToursWidgetState extends State<FeaturedToursWidget> {
-  final List<bool> _favorites = [false, true, false];
-  final List<bool> _bookmarks = [false, false, false];
+  List<Map<String, dynamic>> _featuredTours = [];
+  bool _isLoading = true;
+  final Set<int> _favoredTourIds = {};
+  final Set<int> _bookmarkedTourIds = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchFeaturedTours();
+  }
+
+  Future<void> _fetchFeaturedTours() async {
+    try {
+      final response = await ApiService.getAllTours(limit: 3);
+      
+      if (response['success'] == true) {
+        final List<dynamic> toursData = response['data'] ?? [];
+        setState(() {
+          _featuredTours = toursData.map((tour) {
+            return {
+              'TourID': tour['TourID'],
+              'title': tour['Title'] ?? 'Unknown Tour',
+              'date': _formatDate(tour['DepartureDate']),
+              'duration': '${tour['Duration'] ?? 0} days',
+              'price': '\$${double.tryParse(tour['Price'].toString())?.toStringAsFixed(2) ?? "0.00"}',
+              'image': tour['CoverImageUrl'] ?? '',
+              'rating': (tour['Rating'] ?? 0).toInt(),
+              'likes': tour['TotalLikes'] ?? 0,
+            };
+          }).toList();
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      print('Error fetching featured tours: $e');
+    }
+  }
+
+  String _formatDate(dynamic date) {
+    if (date == null) return 'N/A';
+    try {
+      final DateTime parsedDate = DateTime.parse(date.toString());
+      final List<String> months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ];
+      return '${months[parsedDate.month - 1]} ${parsedDate.day}, ${parsedDate.year}';
+    } catch (e) {
+      return date.toString();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFF00C9A7)),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -43,15 +102,20 @@ class _FeaturedToursWidgetState extends State<FeaturedToursWidget> {
           ],
         ),
         Column(
-          children: [
-            _buildFeaturedCard(
-              image: "assets/images/explore/FeaturedTours/199641361 1.png",
-              title: "Da Nang - Ba Na - Hoi An",
-              date: "Jan 30, 2020",
-              duration: "3 days",
-              price: "\$400.00",
-              isFavorite: _favorites[0],
-              isBookmarked: _bookmarks[0],
+          children: _featuredTours.map((tour) {
+            final isFavorite = _favoredTourIds.contains(tour['TourID']);
+            final isBookmarked = _bookmarkedTourIds.contains(tour['TourID']);
+
+            return _buildFeaturedCard(
+              image: tour['image'] ?? '',
+              title: tour['title'] ?? 'Unknown',
+              date: tour['date'] ?? 'N/A',
+              duration: tour['duration'] ?? 'N/A',
+              price: tour['price'] ?? '\$0.00',
+              isFavorite: isFavorite,
+              isBookmarked: isBookmarked,
+              rating: tour['rating'] ?? 0,
+              likes: tour['likes'] ?? 0,
               onTap: () {
                 Navigator.push(
                   context,
@@ -59,56 +123,25 @@ class _FeaturedToursWidgetState extends State<FeaturedToursWidget> {
                 );
               },
               onToggleFavorite: () {
-                setState(() => _favorites[0] = !_favorites[0]);
+                setState(() {
+                  if (isFavorite) {
+                    _favoredTourIds.remove(tour['TourID']);
+                  } else {
+                    _favoredTourIds.add(tour['TourID']);
+                  }
+                });
               },
               onToggleBookmark: () {
-                setState(() => _bookmarks[0] = !_bookmarks[0]);
+                setState(() {
+                  if (isBookmarked) {
+                    _bookmarkedTourIds.remove(tour['TourID']);
+                  } else {
+                    _bookmarkedTourIds.add(tour['TourID']);
+                  }
+                });
               },
-            ),
-            _buildFeaturedCard(
-              image: "assets/images/explore/FeaturedTours/199641361 1 (1).png",
-              title: "Melbourne - Sydney",
-              date: "Jan 30, 2020",
-              duration: "3 days",
-              price: "\$600.00",
-              isFavorite: _favorites[1],
-              isBookmarked: _bookmarks[1],
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const TourDetailScreen()),
-                );
-              },
-              onToggleFavorite: () {
-                setState(() => _favorites[1] = !_favorites[1]);
-              },
-              onToggleBookmark: () {
-                setState(() => _bookmarks[1] = !_bookmarks[1]);
-              },
-            ),
-            _buildFeaturedCard(
-              image:
-                  "assets/images/explore/FeaturedTours/halong-bay-vietnam-from-above-gettyimages 1.png",
-              title: "Hanoi - Ha Long Bay",
-              date: "Jan 30, 2020",
-              duration: "3 days",
-              price: "\$300.00",
-              isFavorite: _favorites[2],
-              isBookmarked: _bookmarks[2],
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const TourDetailScreen()),
-                );
-              },
-              onToggleFavorite: () {
-                setState(() => _favorites[2] = !_favorites[2]);
-              },
-              onToggleBookmark: () {
-                setState(() => _bookmarks[2] = !_bookmarks[2]);
-              },
-            ),
-          ],
+            );
+          }).toList(),
         ),
       ],
     );
@@ -122,10 +155,46 @@ class _FeaturedToursWidgetState extends State<FeaturedToursWidget> {
     required String price,
     required bool isFavorite,
     required bool isBookmarked,
+    required int rating,
+    required int likes,
     required VoidCallback onTap,
     required VoidCallback onToggleFavorite,
     required VoidCallback onToggleBookmark,
   }) {
+    // Handle image loading
+    Widget imageWidget;
+    if (image.isEmpty) {
+      imageWidget = Container(
+        height: 160,
+        color: Colors.grey[300],
+        child: const Icon(Icons.image, size: 50, color: Colors.white),
+      );
+    } else if (image.startsWith("http")) {
+      imageWidget = Image.network(
+        image,
+        height: 160,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Container(
+          height: 160,
+          color: Colors.grey[300],
+          child: const Icon(Icons.image, size: 50, color: Colors.white),
+        ),
+      );
+    } else {
+      imageWidget = Image.asset(
+        image,
+        height: 160,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Container(
+          height: 160,
+          color: Colors.grey[300],
+          child: const Icon(Icons.image, size: 50, color: Colors.white),
+        ),
+      );
+    }
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -150,19 +219,7 @@ class _FeaturedToursWidgetState extends State<FeaturedToursWidget> {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(20),
                   ),
-                  child: image.startsWith("http")
-                      ? Image.network(
-                          image,
-                          height: 160,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        )
-                      : Image.asset(
-                          image,
-                          height: 160,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
+                  child: imageWidget,
                 ),
                 Positioned(
                   top: 10,
@@ -187,17 +244,17 @@ class _FeaturedToursWidgetState extends State<FeaturedToursWidget> {
                       Row(
                         children: List.generate(
                           5,
-                          (index) => const Icon(
-                            Icons.star,
+                          (index) => Icon(
+                            index < rating ? Icons.star : Icons.star_border,
                             color: Colors.orange,
                             size: 16,
                           ),
                         ),
                       ),
                       const SizedBox(width: 6),
-                      const Text(
-                        "1247 likes",
-                        style: TextStyle(color: Colors.white, fontSize: 12),
+                      Text(
+                        "$likes likes",
+                        style: const TextStyle(color: Colors.white, fontSize: 12),
                       ),
                     ],
                   ),
@@ -217,6 +274,8 @@ class _FeaturedToursWidgetState extends State<FeaturedToursWidget> {
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   InkWell(

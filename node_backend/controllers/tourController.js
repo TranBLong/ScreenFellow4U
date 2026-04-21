@@ -26,7 +26,7 @@ exports.getAllTours = async (req, res) => {
             .input('offset', mssql.Int, offset)
             .input('limit', mssql.Int, limit)
             .query(`
-                SELECT TOP (@limit)
+                SELECT 
                     TourID, Title, Description, Price, OriginalPrice, Duration, 
                     DepartureDate, DeparturePlace, Itinerary, ProviderName, 
                     Rating, TotalLikes, TotalReviews, CoverImageUrl, CreatedAt
@@ -35,6 +35,7 @@ exports.getAllTours = async (req, res) => {
                 AND (Title LIKE @search OR Description LIKE @search)
                 ORDER BY CreatedAt DESC
                 OFFSET @offset ROWS
+                FETCH NEXT @limit ROWS ONLY
             `);
 
         res.json({
@@ -479,7 +480,7 @@ exports.getTourReviews = async (req, res) => {
             .input('offset', mssql.Int, offset)
             .input('limit', mssql.Int, limit)
             .query(`
-                SELECT TOP (@limit)
+                SELECT 
                     r.ReviewID, r.Rating, r.Comment, r.CreatedAt, 
                     u.UserID, u.FullName, u.Avatar
                 FROM TourReviews r
@@ -487,6 +488,7 @@ exports.getTourReviews = async (req, res) => {
                 WHERE r.TourID = @tourId
                 ORDER BY r.CreatedAt DESC
                 OFFSET @offset ROWS
+                FETCH NEXT @limit ROWS ONLY
             `);
 
         res.json({
