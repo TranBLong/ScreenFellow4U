@@ -66,7 +66,23 @@ class TopJourneysWidget extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const TourDetailScreen()),
+          MaterialPageRoute(
+            builder: (_) => TourDetailScreen(
+              tourData: {
+                'Title': title,
+                'CoverImageUrl': image,
+                'DepartureDate': date,
+                'Duration': duration,
+                'Price': price.replaceAll('\$', ''),
+                'OriginalPrice': price.replaceAll('\$', ''),
+                'Rating': 4.5,
+                'TotalReviews': 1247,
+                'ProviderName': 'Featured tour',
+                'Itinerary': title,
+                'Description': title,
+              },
+            ),
+          ),
         );
       },
       child: Container(

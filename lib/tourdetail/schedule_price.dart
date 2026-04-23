@@ -1,7 +1,14 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 class TourScheduleSection extends StatefulWidget {
-  const TourScheduleSection({super.key});
+  final List<Map<String, dynamic>> schedules;
+  final List<Map<String, dynamic>> pricing;
+
+  const TourScheduleSection({
+    super.key,
+    this.schedules = const <Map<String, dynamic>>[],
+    this.pricing = const <Map<String, dynamic>>[],
+  });
 
   @override
   State<TourScheduleSection> createState() => _TourScheduleSectionState();
@@ -10,61 +17,78 @@ class TourScheduleSection extends StatefulWidget {
 class _TourScheduleSectionState extends State<TourScheduleSection> {
   int _selectedDay = 0;
 
-  final List<String> _days = ['Day 1', 'Day 2'];
-
-  final List<Map<String, dynamic>> _day1Schedule = [
+  final List<Map<String, dynamic>> _fallbackSchedules = [
     {
-      'time': '6:00AM',
-      'description':
-          'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled.',
+      'day': 'Day 1',
+      'route': 'Ho Chi Minh - Da Nang',
+      'items': [
+        {
+          'time': '6:00AM',
+          'description':
+              'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
+        },
+        {
+          'time': '10:00AM',
+          'description':
+              'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
+        },
+      ],
     },
     {
-      'time': '10:00AM',
-      'description':
-          'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled.',
-    },
-    {
-      'time': '1:00PM',
-      'description':
-          'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled.\n\nIt has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets.',
-    },
-    {
-      'time': '8:00PM',
-      'description':
-          'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled.',
-    },
-  ];
-
-  final List<Map<String, dynamic>> _day2Schedule = [
-    {
-      'time': '7:00AM',
-      'description':
-          'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled.',
-    },
-    {
-      'time': '12:00PM',
-      'description':
-          'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled.',
-    },
-    {
-      'time': '6:00PM',
-      'description':
-          'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s.',
+      'day': 'Day 2',
+      'route': 'Da Nang - Hoi An',
+      'items': [
+        {
+          'time': '7:00AM',
+          'description':
+              'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
+        },
+        {
+          'time': '12:00PM',
+          'description':
+              'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
+        },
+      ],
     },
   ];
 
-  final List<Map<String, dynamic>> _priceList = [
+  final List<Map<String, dynamic>> _fallbackPricing = [
     {'label': 'Adult (>10 years old)', 'price': '\$400.00'},
     {'label': 'Child (5 - 10 years old)', 'price': '\$320.00'},
     {'label': 'Child (<5 years old)', 'price': 'Free'},
   ];
 
   @override
+  void didUpdateWidget(covariant TourScheduleSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final totalDays = _displaySchedules().length;
+    if (totalDays > 0 && _selectedDay >= totalDays) {
+      _selectedDay = 0;
+    }
+  }
+
+  List<Map<String, dynamic>> _displaySchedules() {
+    if (widget.schedules.isNotEmpty) return widget.schedules;
+    return _fallbackSchedules;
+  }
+
+  List<Map<String, dynamic>> _displayPricing() {
+    if (widget.pricing.isNotEmpty) return widget.pricing;
+    return _fallbackPricing;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final schedule = _selectedDay == 0 ? _day1Schedule : _day2Schedule;
-    final routeLabel = _selectedDay == 0
-        ? 'Ho Chi Minh - Da Nang'
-        : 'Da Nang - Hoi An';
+    final schedules = _displaySchedules();
+    final pricing = _displayPricing();
+    final selectedSchedule = schedules[_selectedDay];
+    final items = (selectedSchedule['items'] as List? ?? const [])
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+    final routeLabel = selectedSchedule['route']?.toString() ??
+        selectedSchedule['RouteLabel']?.toString() ??
+        'Schedule';
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -72,12 +96,10 @@ class _TourScheduleSectionState extends State<TourScheduleSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 16),
-
-          // Title
           Row(
-            children: [
+            children: const [
               Icon(Icons.view_column_outlined, size: 22, color: Colors.black87),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Text(
                 'Schedule',
                 style: TextStyle(
@@ -88,25 +110,20 @@ class _TourScheduleSectionState extends State<TourScheduleSection> {
               ),
             ],
           ),
-
           const SizedBox(height: 16),
-
-          // Day tabs
           Row(
-            children: List.generate(_days.length, (index) {
+            children: List.generate(schedules.length, (index) {
               final isSelected = _selectedDay == index;
+              final label = schedules[index]['day']?.toString() ??
+                  schedules[index]['DayNumber']?.toString() ??
+                  'Day ${index + 1}';
               return GestureDetector(
                 onTap: () => setState(() => _selectedDay = index),
                 child: Container(
                   margin: const EdgeInsets.only(right: 10),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 8,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? const Color(0xFF00C9A7)
-                        : Colors.transparent,
+                    color: isSelected ? const Color(0xFF00C9A7) : Colors.transparent,
                     border: Border.all(
                       color: isSelected
                           ? const Color(0xFF00C9A7)
@@ -115,51 +132,48 @@ class _TourScheduleSectionState extends State<TourScheduleSection> {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    _days[index],
+                    label,
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected ? Colors.white : Colors.grey[600],
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      color: isSelected ? Colors.white : Colors.black87,
                     ),
                   ),
                 ),
               );
             }),
           ),
-
-          const SizedBox(height: 16),
-
-          // Route label
+          const SizedBox(height: 14),
           Text(
             routeLabel,
             style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
             ),
           ),
-
           const SizedBox(height: 16),
-
-          // Timeline
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: schedule.length,
-            itemBuilder: (context, index) {
-              final item = schedule[index];
-              final isLast = index == schedule.length - 1;
-              return _timelineItem(
-                time: item['time'],
-                description: item['description'],
-                isLast: isLast,
-              );
-            },
-          ),
-
-          const SizedBox(height: 28),
-
-          // Price section
+          if (items.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                'No schedule available.',
+                style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+              ),
+            )
+          else
+            Column(
+              children: List.generate(items.length, (index) {
+                final item = items[index];
+                return _timelineItem(
+                  time: item['time']?.toString() ?? item['TimeSlot']?.toString() ?? '',
+                  description:
+                      item['description']?.toString() ?? item['Description']?.toString() ?? '',
+                  isLast: index == items.length - 1,
+                );
+              }),
+            ),
+          const SizedBox(height: 24),
           Row(
             children: [
               Container(
@@ -169,7 +183,7 @@ class _TourScheduleSectionState extends State<TourScheduleSection> {
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.black87, width: 2),
                 ),
-                child: Center(
+                child: const Center(
                   child: Text(
                     '\$',
                     style: TextStyle(
@@ -181,7 +195,7 @@ class _TourScheduleSectionState extends State<TourScheduleSection> {
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
+              const Text(
                 'Price',
                 style: TextStyle(
                   fontSize: 20,
@@ -191,19 +205,16 @@ class _TourScheduleSectionState extends State<TourScheduleSection> {
               ),
             ],
           ),
-
           const SizedBox(height: 14),
-
-          // Price table
           Container(
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey.shade200),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
-              children: List.generate(_priceList.length, (index) {
-                final item = _priceList[index];
-                final isLast = index == _priceList.length - 1;
+              children: List.generate(pricing.length, (index) {
+                final item = pricing[index];
+                final isLast = index == pricing.length - 1;
                 return Column(
                   children: [
                     Padding(
@@ -215,15 +226,15 @@ class _TourScheduleSectionState extends State<TourScheduleSection> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            item['label'],
-                            style: TextStyle(
+                            item['label']?.toString() ?? '',
+                            style: const TextStyle(
                               fontSize: 14,
                               color: Colors.black87,
                             ),
                           ),
                           Text(
-                            item['price'],
-                            style: TextStyle(
+                            item['price']?.toString() ?? '',
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: Colors.black87,
@@ -238,7 +249,6 @@ class _TourScheduleSectionState extends State<TourScheduleSection> {
               }),
             ),
           ),
-
           const SizedBox(height: 24),
         ],
       ),
@@ -254,7 +264,6 @@ class _TourScheduleSectionState extends State<TourScheduleSection> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Timeline column
           SizedBox(
             width: 20,
             child: Column(
@@ -263,9 +272,9 @@ class _TourScheduleSectionState extends State<TourScheduleSection> {
                   width: 14,
                   height: 14,
                   margin: const EdgeInsets.only(top: 3),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFF00C9A7),
+                    color: Color(0xFF00C9A7),
                   ),
                   child: Center(
                     child: Container(
@@ -288,10 +297,7 @@ class _TourScheduleSectionState extends State<TourScheduleSection> {
               ],
             ),
           ),
-
           const SizedBox(width: 12),
-
-          // Content
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(bottom: 20),
@@ -300,10 +306,10 @@ class _TourScheduleSectionState extends State<TourScheduleSection> {
                 children: [
                   Text(
                     time,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: const Color(0xFF00C9A7),
+                      color: Color(0xFF00C9A7),
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -324,6 +330,3 @@ class _TourScheduleSectionState extends State<TourScheduleSection> {
     );
   }
 }
-
-// Gá»i hÃ m nÃ y khi nháº¥n nÃºt Share
-

@@ -119,7 +119,25 @@ class _FeaturedToursWidgetState extends State<FeaturedToursWidget> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const TourDetailScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => TourDetailScreen(
+                      tourId: int.tryParse(tour['TourID'].toString()),
+                      tourData: {
+                        'Title': tour['title'],
+                        'CoverImageUrl': tour['image'],
+                        'DepartureDate': tour['date'],
+                        'Duration': tour['duration'],
+                        'Price': tour['price'] == null
+                            ? null
+                            : tour['price'].toString().replaceAll('\$', ''),
+                        'Rating': tour['rating'],
+                        'TotalReviews': tour['likes'],
+                        'ProviderName': 'Featured tours',
+                        'Itinerary': tour['title'],
+                        'Description': tour['title'],
+                      },
+                    ),
+                  ),
                 );
               },
               onToggleFavorite: () {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../used/signup.dart';
+import '../used/signin.dart';
 
 class OnboardingScreen03 extends StatelessWidget {
   const OnboardingScreen03({super.key});
@@ -53,7 +53,7 @@ class OnboardingScreen03 extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => SignUp()),
+                      MaterialPageRoute(builder: (context) => SignIn()),
                     );
                   },
                   style: ElevatedButton.styleFrom(

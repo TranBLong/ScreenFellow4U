@@ -4,11 +4,14 @@ import 'package:http/http.dart' as http;
 class ApiService {
   // Thay thế bằng địa chỉ IP máy tính của bạn
   static const String baseUrl = 'http://192.168.100.6:5000';
+  // static const String baseUrl = 'http://10.105.24.216:5000';
 
   // ==================== AUTH ====================
   static Future<List<dynamic>> fetchUsers() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/test_connection.php'));
+      final response = await http.get(
+        Uri.parse('$baseUrl/test_connection.php'),
+      );
 
       if (response.statusCode == 200) {
         return json.decode(response.body);
@@ -57,10 +60,7 @@ class ApiService {
       final response = await http.post(
         Uri.parse('$baseUrl/api/auth/login'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'email': email,
-          'password': password,
-        }),
+        body: json.encode({'email': email, 'password': password}),
       );
 
       return json.decode(response.body);
@@ -163,7 +163,8 @@ class ApiService {
       if (minPrice != null) url += '&minPrice=$minPrice';
       if (maxPrice != null) url += '&maxPrice=$maxPrice';
       if (minRating != null) url += '&minRating=$minRating';
-      if (departure != null && departure.isNotEmpty) url += '&departure=$departure';
+      if (departure != null && departure.isNotEmpty)
+        url += '&departure=$departure';
 
       final response = await http.get(
         Uri.parse(url),
@@ -287,10 +288,7 @@ class ApiService {
   }
 
   // POST unlike tour
-  static Future<Map<String, dynamic>> unlikeTour(
-    int tourId,
-    int userId,
-  ) async {
+  static Future<Map<String, dynamic>> unlikeTour(int tourId, int userId) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/tours/$tourId/unlike'),

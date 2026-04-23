@@ -68,7 +68,21 @@ class TopExperiencesWidget extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const TourDetailScreen()),
+          MaterialPageRoute(
+            builder: (_) => TourDetailScreen(
+              tourData: {
+                'Title': title,
+                'CoverImageUrl': image,
+                'Price': '0',
+                'Rating': 4.5,
+                'TotalReviews': 0,
+                'ProviderName': name,
+                'Itinerary': title,
+                'DeparturePlace': location,
+                'Description': title,
+              },
+            ),
+          ),
         );
       },
       child: Container(

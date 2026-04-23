@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../used/signup.dart';
+import '../used/signin.dart';
 
 class OnboardingScreen01 extends StatelessWidget {
   const OnboardingScreen01({super.key});
@@ -69,7 +69,7 @@ class OnboardingScreen01 extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => SignUp()),
+                  MaterialPageRoute(builder: (context) => SignIn()),
                 );
               },
               child: const Text('Skip', style: TextStyle(fontSize: 18)),
