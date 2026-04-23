@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../api_service.dart';
+import '../tourdetail/tourdetail.dart';
 
 class ToursMoreScreen extends StatefulWidget {
   const ToursMoreScreen({super.key});
@@ -117,6 +118,29 @@ class _ToursMoreScreenState extends State<ToursMoreScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _openTourDetail(Map<String, dynamic> tour) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TourDetailScreen(
+          tourId: int.tryParse(tour['TourID'].toString()),
+          tourData: {
+            'Title': tour['title'],
+            'CoverImageUrl': tour['image'],
+            'DepartureDate': tour['date'],
+            'Duration': tour['days'],
+            'Price': tour['price'],
+            'Rating': tour['rating'],
+            'TotalReviews': tour['likes'],
+            'ProviderName': 'More tours',
+            'Itinerary': tour['title'],
+            'Description': tour['description'],
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -294,6 +318,7 @@ class _ToursMoreScreenState extends State<ToursMoreScreen> {
                     padding: const EdgeInsets.only(bottom: 16),
                     child: _TourCard(
                       tour: _filteredTours[index],
+                      onTap: () => _openTourDetail(_filteredTours[index]),
                       onFavoriteToggle: () {
                         setState(() {
                           final tourId = _filteredTours[index]['TourID'];
@@ -349,9 +374,14 @@ class _ToursMoreScreenState extends State<ToursMoreScreen> {
 
 class _TourCard extends StatelessWidget {
   final Map<String, dynamic> tour;
+  final VoidCallback onTap;
   final VoidCallback onFavoriteToggle;
 
-  const _TourCard({required this.tour, required this.onFavoriteToggle});
+  const _TourCard({
+    required this.tour,
+    required this.onTap,
+    required this.onFavoriteToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -394,21 +424,23 @@ class _TourCard extends StatelessWidget {
     final bool isFav = tour['isFavorite'] as bool;
     final int rating = tour['rating'] as int? ?? 0;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           // Image
           Stack(
             children: [
@@ -558,7 +590,8 @@ class _TourCard extends StatelessWidget {
               ],
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }
