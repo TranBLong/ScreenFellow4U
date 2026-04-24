@@ -1,10 +1,13 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:ktck/models/guide.dart';
 
 class ReviewsSection extends StatelessWidget {
-  const ReviewsSection({super.key});
+  final List<GuideReview>? reviews;
 
-  static const _reviews = [
-    _Review(
+  const ReviewsSection({super.key, this.reviews});
+
+  static final List<GuideReview> _defaultReviews = <GuideReview>[
+    GuideReview(
       name: 'Pena Valdez',
       date: 'Jan 22, 2020',
       rating: 4,
@@ -15,7 +18,7 @@ class ReviewsSection extends StatelessWidget {
           'specimen book. It has survived not only five centuries.',
       avatarUrl: 'assets/images/chooseaguide/main/reviews/Ellipse 11.png',
     ),
-    _Review(
+    GuideReview(
       name: 'Daehyun',
       date: 'Jan 22, 2020',
       rating: 4,
@@ -24,7 +27,7 @@ class ReviewsSection extends StatelessWidget {
           "their default model text, and a search for 'lorem ipsum'",
       avatarUrl: 'assets/images/chooseaguide/main/reviews/Ellipse 11 (1).png',
     ),
-    _Review(
+    GuideReview(
       name: 'Burns Marks',
       date: 'Jan 22, 2020',
       rating: 4,
@@ -38,6 +41,8 @@ class ReviewsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final displayReviews = reviews?.isNotEmpty == true ? reviews! : _defaultReviews;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -75,34 +80,18 @@ class ReviewsSection extends StatelessWidget {
         ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: _reviews.length,
-          separatorBuilder: (_, __) =>
-              const Divider(height: 28, thickness: 0.8),
-          itemBuilder: (_, i) => _ReviewItem(review: _reviews[i]),
+          itemCount: displayReviews.length,
+          separatorBuilder: (_, __) => const Divider(height: 28, thickness: 0.8),
+          itemBuilder: (_, i) => _ReviewItem(review: displayReviews[i]),
         ),
       ],
     );
   }
 }
 
-class _Review {
-  final String name;
-  final String date;
-  final double rating;
-  final String comment;
-  final String avatarUrl;
-
-  const _Review({
-    required this.name,
-    required this.date,
-    required this.rating,
-    required this.comment,
-    required this.avatarUrl,
-  });
-}
-
 class _ReviewItem extends StatelessWidget {
-  final _Review review;
+  final GuideReview review;
+
   const _ReviewItem({required this.review});
 
   @override
@@ -115,9 +104,7 @@ class _ReviewItem extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 24,
-              backgroundImage: review.avatarUrl.startsWith('http')
-                  ? NetworkImage(review.avatarUrl)
-                  : AssetImage(review.avatarUrl) as ImageProvider,
+              backgroundImage: _buildAvatarProvider(review.avatarUrl),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -187,4 +174,16 @@ class _StarRating extends StatelessWidget {
       }),
     );
   }
+}
+
+ImageProvider _buildAvatarProvider(String avatarUrl) {
+  if (avatarUrl.isNotEmpty && avatarUrl.startsWith('http')) {
+    return NetworkImage(avatarUrl);
+  }
+
+  if (avatarUrl.isNotEmpty) {
+    return AssetImage(avatarUrl);
+  }
+
+  return const AssetImage('assets/images/chooseaguide/main/reviews/Ellipse 11.png');
 }

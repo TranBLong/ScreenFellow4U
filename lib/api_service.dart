@@ -147,6 +147,89 @@ class ApiService {
     }
   }
 
+  // GET all guides with pagination and optional filters
+  static Future<Map<String, dynamic>> getAllGuides({
+    int page = 1,
+    int limit = 10,
+    String search = '',
+    String location = '',
+    String language = '',
+  }) async {
+    try {
+      String url = '$baseUrl/api/guides?page=$page&limit=$limit';
+      if (search.isNotEmpty) url += '&search=$search';
+      if (location.isNotEmpty) url += '&location=$location';
+      if (language.isNotEmpty) url += '&language=$language';
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to load guides');
+      }
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  // GET guide details by ID
+  static Future<Map<String, dynamic>> getGuideById(int guideId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/guides/$guideId'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to load guide details');
+      }
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  // GET featured guides
+  static Future<Map<String, dynamic>> getFeaturedGuides({int limit = 10}) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/guides/featured?limit=$limit'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to load featured guides');
+      }
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  // GET top-rated guides
+  static Future<Map<String, dynamic>> getTopRatedGuides({int limit = 10}) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/guides/top-rated?limit=$limit'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to load top-rated guides');
+      }
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
   // Search tours with filters
   static Future<Map<String, dynamic>> searchTours({
     String keyword = '',

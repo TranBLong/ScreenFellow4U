@@ -1,7 +1,10 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:ktck/models/guide.dart';
 
 class MyExperiencesSection extends StatelessWidget {
-  const MyExperiencesSection({super.key});
+  final List<GuideExperience>? experiences;
+
+  const MyExperiencesSection({super.key, this.experiences});
 
   static const _experiences = [
     _Experience(
@@ -30,6 +33,10 @@ class MyExperiencesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final displayExperiences = experiences != null && experiences!.isNotEmpty
+        ? experiences!.map((exp) => _Experience.fromGuideExperience(exp)).toList()
+        : _experiences;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -38,7 +45,7 @@ class MyExperiencesSection extends StatelessWidget {
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        ..._experiences
+        ...displayExperiences
             .map(
               (exp) => Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -69,6 +76,20 @@ class _Experience {
     required this.imageTopRight,
     required this.imageBottomRight,
   });
+
+  factory _Experience.fromGuideExperience(GuideExperience experience) {
+    final images = experience.imageUrls;
+    const fallback = 'assets/images/chooseaguide/main/nhom1/hoian 1 (2).png';
+    return _Experience(
+      title: experience.title,
+      location: experience.location,
+      date: experience.date.isNotEmpty ? experience.date : 'Unknown date',
+      likes: experience.likes,
+      imageLeft: images.isNotEmpty ? images[0] : fallback,
+      imageTopRight: images.length > 1 ? images[1] : fallback,
+      imageBottomRight: images.length > 2 ? images[2] : fallback,
+    );
+  }
 }
 
 class _ExperienceCard extends StatefulWidget {
