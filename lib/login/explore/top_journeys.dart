@@ -1,11 +1,76 @@
 import 'package:flutter/material.dart';
 import 'package:ktck/tourdetail/tourdetail.dart';
+import 'package:ktck/api_service.dart';
 
-class TopJourneysWidget extends StatelessWidget {
+class TopJourneysWidget extends StatefulWidget {
   const TopJourneysWidget({super.key});
 
   @override
+  State<TopJourneysWidget> createState() => _TopJourneysWidgetState();
+}
+
+class _TopJourneysWidgetState extends State<TopJourneysWidget> {
+  List<Map<String, dynamic>> _topJourneys = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTopJourneys();
+  }
+
+  Future<void> _fetchTopJourneys() async {
+    try {
+      final response = await ApiService.getAllTours(limit: 5);
+      
+      if (response['success'] == true) {
+        final List<dynamic> toursData = response['data'] ?? [];
+        setState(() {
+          _topJourneys = toursData.map((tour) {
+            return {
+              'TourID': tour['TourID'],
+              'title': tour['Title'] ?? 'Unknown Tour',
+              'date': _formatDate(tour['DepartureDate']),
+              'duration': '${tour['Duration'] ?? 0} days',
+              'price': '\$${double.tryParse(tour['Price'].toString())?.toStringAsFixed(2) ?? "0.00"}',
+              'image': tour['CoverImageUrl'] ?? '',
+              'rating': (tour['Rating'] ?? 0).toInt(),
+              'likes': tour['TotalLikes'] ?? 0,
+            };
+          }).toList();
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      print('Error fetching top journeys: $e');
+    }
+  }
+
+  String _formatDate(dynamic date) {
+    if (date == null) return 'N/A';
+    try {
+      final DateTime parsedDate = DateTime.parse(date.toString());
+      final List<String> months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ];
+      return '${months[parsedDate.month - 1]} ${parsedDate.day}, ${parsedDate.year}';
+    } catch (e) {
+      return date.toString();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFF00C9A7)),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -19,34 +84,19 @@ class TopJourneysWidget extends StatelessWidget {
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: [
-                _buildJourneyCard(
+              children: _topJourneys.map((tour) {
+                return _buildJourneyCard(
                   context: context,
-                  image: "assets/images/explore/TopJourneys/670301139 1.png",
-                  title: "Da Nang - Ba Na - Hoi An",
-                  date: "Jan 30, 2020",
-                  duration: "3 days",
-                  price: "\$400.00",
-                ),
-                _buildJourneyCard(
-                  context: context,
-                  image:
-                      "https://cdn.nhandan.vn/images/1ea1ae7a315d88fc6fbf436960826115d9db77fae530c97a0f41bf87fc71014c3c08f01b123175d18261c3073b03704ae667d376bf869970b83bd2a9ea12e0ea/4-902-6587.jpg",
-                  title: "Thailand",
-                  date: "Jan 30, 2020",
-                  duration: "3 days",
-                  price: "\$600.00",
-                ),
-                _buildJourneyCard(
-                  context: context,
-                  image:
-                      "https://cdn.nhandan.vn/images/1ea1ae7a315d88fc6fbf436960826115d9db77fae530c97a0f41bf87fc71014c3c08f01b123175d18261c3073b03704ae667d376bf869970b83bd2a9ea12e0ea/4-902-6587.jpg",
-                  title: "Bali - Ubud - Kuta",
-                  date: "Feb 10, 2020",
-                  duration: "4 days",
-                  price: "\$520.00",
-                ),
-              ],
+                  tourId: tour['TourID'],
+                  image: tour['image'],
+                  title: tour['title'],
+                  date: tour['date'],
+                  duration: tour['duration'],
+                  price: tour['price'],
+                  rating: tour['rating'],
+                  likes: tour['likes'],
+                );
+              }).toList(),
             ),
           ),
         ),
@@ -56,18 +106,56 @@ class TopJourneysWidget extends StatelessWidget {
 
   Widget _buildJourneyCard({
     required BuildContext context,
+    required dynamic tourId,
     required String image,
     required String title,
     required String date,
     required String duration,
     required String price,
+    required int rating,
+    required int likes,
   }) {
+    // Handle image loading
+    Widget imageWidget;
+    if (image.isEmpty) {
+      imageWidget = Container(
+        height: 150,
+        color: Colors.grey[300],
+        child: const Icon(Icons.image, size: 50, color: Colors.white),
+      );
+    } else if (image.startsWith("http")) {
+      imageWidget = Image.network(
+        image,
+        height: 150,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Container(
+          height: 150,
+          color: Colors.grey[300],
+          child: const Icon(Icons.image, size: 50, color: Colors.white),
+        ),
+      );
+    } else {
+      imageWidget = Image.asset(
+        image,
+        height: 150,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Container(
+          height: 150,
+          color: Colors.grey[300],
+          child: const Icon(Icons.image, size: 50, color: Colors.white),
+        ),
+      );
+    }
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => TourDetailScreen(
+              tourId: int.tryParse(tourId.toString()),
               tourData: {
                 'Title': title,
                 'CoverImageUrl': image,
@@ -75,9 +163,9 @@ class TopJourneysWidget extends StatelessWidget {
                 'Duration': duration,
                 'Price': price.replaceAll('\$', ''),
                 'OriginalPrice': price.replaceAll('\$', ''),
-                'Rating': 4.5,
-                'TotalReviews': 1247,
-                'ProviderName': 'Featured tour',
+                'Rating': rating,
+                'TotalReviews': likes,
+                'ProviderName': 'Top journeys',
                 'Itinerary': title,
                 'Description': title,
               },
@@ -108,19 +196,7 @@ class TopJourneysWidget extends StatelessWidget {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(20),
                   ),
-                  child: image.startsWith("http")
-                      ? Image.network(
-                          image,
-                          height: 150,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        )
-                      : Image.asset(
-                          image,
-                          height: 150,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
+                  child: imageWidget,
                 ),
                 const Positioned(
                   top: 10,
@@ -129,9 +205,7 @@ class TopJourneysWidget extends StatelessWidget {
                 ),
               ],
             ),
-
             const SizedBox(height: 8),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Row(
@@ -139,24 +213,22 @@ class TopJourneysWidget extends StatelessWidget {
                   Row(
                     children: List.generate(
                       5,
-                      (index) => const Icon(
-                        Icons.star,
+                      (index) => Icon(
+                        index < rating ? Icons.star : Icons.star_border,
                         color: Colors.orange,
                         size: 16,
                       ),
                     ),
                   ),
                   const SizedBox(width: 5),
-                  const Text(
-                    "1247 likes",
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  Text(
+                    "$likes likes",
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
               ),
             ),
-
             const SizedBox(height: 8),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Text(
@@ -165,11 +237,11 @@ class TopJourneysWidget extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-
             const SizedBox(height: 6),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Row(
@@ -187,7 +259,6 @@ class TopJourneysWidget extends StatelessWidget {
                 ],
               ),
             ),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Row(
@@ -201,9 +272,7 @@ class TopJourneysWidget extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 8),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Text(
@@ -215,7 +284,6 @@ class TopJourneysWidget extends StatelessWidget {
                 ),
               ),
             ),
-
             const SizedBox(height: 10),
           ],
         ),
