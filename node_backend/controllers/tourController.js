@@ -74,30 +74,27 @@ exports.getTourById = async (req, res) => {
 
         const tour = tourResult.recordset[0];
 
-        // Get tour images
-        const imagesResult = await request
-            .input('tourId', mssql.Int, id)
-            .query(`
+        // Get tour images - reuse request (tourId is already input)
+        const imagesResult = await request.query(`
                 SELECT ImageID, ImageUrl 
                 FROM TourImages 
                 WHERE TourID = @tourId
                 ORDER BY SortOrder
             `);
 
-        // Get tour schedules
-        const schedulesResult = await request
-            .input('tourId', mssql.Int, id)
-            .query(`
+        // Get tour schedules - reuse request
+        const schedulesResult = await request.query(`
                 SELECT ScheduleID, DayNumber, RouteLabel 
                 FROM TourSchedules 
                 WHERE TourID = @tourId
                 ORDER BY DayNumber
             `);
 
-        // Get schedule items for each schedule
+        // Get schedule items for each schedule - use new request for each sub-query
         const schedulesWithItems = await Promise.all(
             schedulesResult.recordset.map(async (schedule) => {
-                const itemsResult = await request
+                const itemRequest = pool.request();
+                const itemsResult = await itemRequest
                     .input('scheduleId', mssql.Int, schedule.ScheduleID)
                     .query(`
                         SELECT ItemID, TimeSlot, Description 
@@ -112,24 +109,19 @@ exports.getTourById = async (req, res) => {
             })
         );
 
-        // Get pricing
-        const pricingResult = await request
-            .input('tourId', mssql.Int, id)
-            .query(`
+        // Get pricing - reuse main request
+        const pricingResult = await request.query(`
                 SELECT PricingID, Label, Price, IsFree 
                 FROM TourPricing 
                 WHERE TourID = @tourId
                 ORDER BY SortOrder
             `);
 
-        // Get reviews
-        const reviewsResult = await request
-            .input('tourId', mssql.Int, id)
-            .query(`
-                SELECT r.ReviewID, r.Rating, r.Comment, r.CreatedAt, 
-                       u.UserID, u.FullName, u.Avatar
+        // Get reviews - reuse main request
+        const reviewsResult = await request.query(`
+                SELECT r.ReviewID, r.UserID, r.Rating, r.Comment, r.CreatedAt,
+                       NULL AS FullName, NULL AS AvatarUrl
                 FROM TourReviews r
-                LEFT JOIN Users u ON r.UserID = u.UserID
                 WHERE r.TourID = @tourId
                 ORDER BY r.CreatedAt DESC
             `);
@@ -232,11 +224,8 @@ exports.bookmarkTour = async (req, res) => {
             return res.status(400).json({ success: false, error: 'Already bookmarked' });
         }
 
-        // Add bookmark
-        await request
-            .input('userId', mssql.Int, userId)
-            .input('tourId', mssql.Int, id)
-            .query(`
+        // Add bookmark - reuse request (userId and tourId are already input)
+        await request.query(`
                 INSERT INTO TourBookmarks (UserID, TourID, CreatedAt)
                 VALUES (@userId, @tourId, GETDATE())
             `);
@@ -339,11 +328,8 @@ exports.likeTour = async (req, res) => {
             return res.status(400).json({ success: false, error: 'Already liked' });
         }
 
-        // Add like
-        await request
-            .input('userId', mssql.Int, userId)
-            .input('tourId', mssql.Int, id)
-            .query(`
+        // Add like - reuse request
+        await request.query(`
                 INSERT INTO TourLikes (UserID, TourID, CreatedAt)
                 VALUES (@userId, @tourId, GETDATE());
                 
@@ -425,10 +411,8 @@ exports.postReview = async (req, res) => {
             return res.status(400).json({ success: false, error: 'You already reviewed this tour' });
         }
 
-        // Insert review
+        // Insert review - reuse request, add rating and comment
         const insertResult = await request
-            .input('tourId', mssql.Int, id)
-            .input('userId', mssql.Int, userId)
             .input('rating', mssql.Decimal(3, 1), rating)
             .input('comment', mssql.NVarChar(mssql.MAX), comment || null)
             .query(`
@@ -474,17 +458,15 @@ exports.getTourReviews = async (req, res) => {
 
         const total = countResult.recordset[0].total;
 
-        // Get reviews with pagination
+        // Get reviews with pagination - reuse request (tourId already input)
         const result = await request
-            .input('tourId', mssql.Int, id)
             .input('offset', mssql.Int, offset)
             .input('limit', mssql.Int, limit)
             .query(`
                 SELECT 
-                    r.ReviewID, r.Rating, r.Comment, r.CreatedAt, 
-                    u.UserID, u.FullName, u.Avatar
+                    r.ReviewID, r.UserID, r.Rating, r.Comment, r.CreatedAt,
+                    NULL AS FullName, NULL AS AvatarUrl
                 FROM TourReviews r
-                LEFT JOIN Users u ON r.UserID = u.UserID
                 WHERE r.TourID = @tourId
                 ORDER BY r.CreatedAt DESC
                 OFFSET @offset ROWS

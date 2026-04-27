@@ -80,6 +80,7 @@ flutter:
     - assets/images/mytrip/mytripnext/
     - assets/images/mytrip/mytrippast/
     - assets/images/chooseaguide/main/background/
+    - assets/images/tours/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

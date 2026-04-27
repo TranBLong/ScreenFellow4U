@@ -32,50 +32,7 @@ class Guide {
   });
 
   factory Guide.fromSummaryJson(Map<String, dynamic> json) {
-    return Guide(
-      id: _readInt(json, const ['GuideID', 'GuideId', 'id']),
-      name: _readString(json, const ['Name', 'name', 'GuideName', 'guideName']),
-      location: _readString(json, const [
-        'Location',
-        'location',
-        'GuideLocation',
-        'guideLocation',
-      ]),
-      image: _readString(json, const [
-        'Image',
-        'image',
-        'ImageUrl',
-        'imageUrl',
-        'Avatar',
-        'avatar',
-        'AvatarUrl',
-        'avatarUrl',
-        'AvatarImage',
-        'avatarImage',
-      ]),
-      avatarImage: _readString(json, const [
-        'Avatar',
-        'AvatarUrl',
-        'AvatarImage',
-        'AvatarImageUrl',
-        'avatar',
-        'avatarUrl',
-        'avatarImage',
-      ]),
-      backgroundImage: _readString(json, const [
-        'Background',
-        'BackgroundUrl',
-        'BackgroundImage',
-        'BackgroundImageUrl',
-        'background',
-        'backgroundUrl',
-        'backgroundImage',
-      ]),
-      description: _readString(json, const ['Description', 'description']),
-      reviews: _readInt(json, const ['Reviews', 'reviews']) ?? 0,
-      rating: _readDouble(json, const ['Rating', 'rating']) ?? 0.0,
-      totalLikes: _readInt(json, const ['TotalLikes', 'totalLikes']) ?? 0,
-    );
+    return Guide.fromJson(json);
   }
 
   factory Guide.fromDetailJson(
@@ -128,11 +85,40 @@ class Guide {
       reviews: _readInt(json, const ['Reviews', 'reviews']) ?? 0,
       rating: _readDouble(json, const ['Rating', 'rating']) ?? 0.0,
       totalLikes: _readInt(json, const ['TotalLikes', 'totalLikes']) ?? 0,
-      languages: languages ?? const ['Vietnamese', 'English'],
-      pricing: pricing ?? const [],
-      experiences: experiences ?? const [],
-      reviewsData: reviewsData ?? const [],
+      languages: languages ?? _readStringList(json['languages'] ?? json['Languages']),
+      pricing: pricing ?? _readPricingList(json['pricing'] ?? json['Pricing']),
+      experiences: experiences ?? _readExperienceList(json['experiences'] ?? json['Experiences']),
+      reviewsData: reviewsData ?? _readReviewList(json['reviews'] ?? json['Reviews']),
     );
+  }
+
+  factory Guide.fromJson(Map<String, dynamic> json) {
+    return Guide.fromDetailJson(
+      json,
+      languages: _readStringList(json['languages'] ?? json['Languages']),
+      pricing: _readPricingList(json['pricing'] ?? json['Pricing']),
+      experiences: _readExperienceList(json['experiences'] ?? json['Experiences']),
+      reviewsData: _readReviewList(json['reviews'] ?? json['Reviews']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'location': location,
+      'image': image,
+      'avatarImage': avatarImage,
+      'backgroundImage': backgroundImage,
+      'rating': rating,
+      'reviews': reviews,
+      'totalLikes': totalLikes,
+      'description': description,
+      'languages': languages,
+      'pricing': pricing.map((item) => item.toJson()).toList(),
+      'experiences': experiences.map((item) => item.toJson()).toList(),
+      'reviewsData': reviewsData.map((item) => item.toJson()).toList(),
+    };
   }
 
   static String _readString(Map<String, dynamic> json, List<String> keys) {
@@ -164,6 +150,53 @@ class Guide {
     }
     return null;
   }
+
+  static List<String> _readStringList(dynamic value) {
+    if (value is List) {
+      return value
+          .map((entry) {
+            if (entry == null) return '';
+            if (entry is String) return entry;
+            if (entry is Map<String, dynamic>) {
+              return _readString(entry, const ['Language', 'language']);
+            }
+            return entry.toString();
+          })
+          .where((item) => item.isNotEmpty)
+          .toList();
+    }
+    return const ['Vietnamese', 'English'];
+  }
+
+  static List<GuidePricing> _readPricingList(dynamic value) {
+    if (value is List) {
+      return value
+          .whereType<Map<String, dynamic>>()
+          .map(GuidePricing.fromJson)
+          .toList();
+    }
+    return const [];
+  }
+
+  static List<GuideExperience> _readExperienceList(dynamic value) {
+    if (value is List) {
+      return value
+          .whereType<Map<String, dynamic>>()
+          .map(GuideExperience.fromJson)
+          .toList();
+    }
+    return const [];
+  }
+
+  static List<GuideReview> _readReviewList(dynamic value) {
+    if (value is List) {
+      return value
+          .whereType<Map<String, dynamic>>()
+          .map(GuideReview.fromJson)
+          .toList();
+    }
+    return const [];
+  }
 }
 
 class GuidePricing {
@@ -191,6 +224,15 @@ class GuidePricing {
       price: Guide._readDouble(json, const ['Price', 'price']) ?? 0.0,
       currency: Guide._readString(json, const ['Currency', 'currency']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'groupLabel': groupLabel,
+      'price': price,
+      'currency': currency,
+    };
   }
 }
 
@@ -224,7 +266,21 @@ class GuideExperience {
       likes: Guide._readInt(json, const ['Likes', 'likes']) ?? 0,
       isLiked: json['IsLiked'] == 1 || json['IsLiked'] == true,
       sortOrder: Guide._readInt(json, const ['SortOrder', 'sortOrder']) ?? 0,
+      imageUrls: Guide._readStringList(json['ImageUrls'] ?? json['imageUrls'] ?? json['Images'] ?? json['images']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'location': location,
+      'date': date,
+      'likes': likes,
+      'isLiked': isLiked,
+      'sortOrder': sortOrder,
+      'imageUrls': imageUrls,
+    };
   }
 }
 
@@ -259,5 +315,16 @@ class GuideReview {
         'avatar',
       ]),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'date': date,
+      'rating': rating,
+      'comment': comment,
+      'avatarUrl': avatarUrl,
+    };
   }
 }
