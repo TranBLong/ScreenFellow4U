@@ -159,11 +159,7 @@ class _StarRating extends StatelessWidget {
   final int maxStars;
   final double size;
 
-  const _StarRating({
-    required this.rating,
-    this.maxStars = 5,
-    this.size = 14,
-  });
+  const _StarRating({required this.rating, this.maxStars = 5, this.size = 14});
 
   @override
   Widget build(BuildContext context) {

@@ -13,6 +13,12 @@ class BestGuidesWidget extends StatefulWidget {
 
 class _BestGuidesWidgetState extends State<BestGuidesWidget> {
   late final Future<List<Guide>> _guidesFuture;
+  static const List<List<String>> _preferredGuideNameGroups = [
+    ['Linh Han', 'Linh Hana'],
+    ['Tuan Tran'],
+    ['Khai Ho'],
+    ['Emmy'],
+  ];
 
   @override
   void initState() {
@@ -29,10 +35,33 @@ class _BestGuidesWidgetState extends State<BestGuidesWidget> {
     }
 
     final rawItems = _extractGuideItems(response);
-    return rawItems
+    final guides = rawItems
         .whereType<Map<String, dynamic>>()
         .map(Guide.fromSummaryJson)
         .toList();
+
+    final preferredGuides = <Guide>[];
+    for (final nameGroup in _preferredGuideNameGroups) {
+      final match = guides.where(
+        (guide) => nameGroup.any(
+          (preferredName) =>
+              _normalizeName(guide.name) == _normalizeName(preferredName),
+        ),
+      );
+      if (match.isNotEmpty) {
+        preferredGuides.add(match.first);
+      }
+    }
+
+    if (preferredGuides.isNotEmpty) {
+      return preferredGuides.take(4).toList();
+    }
+
+    return guides.take(4).toList();
+  }
+
+  String _normalizeName(String value) {
+    return value.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
   }
 
   List<Map<String, dynamic>> _extractGuideItems(Map<String, dynamic> response) {

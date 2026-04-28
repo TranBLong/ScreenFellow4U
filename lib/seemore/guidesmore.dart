@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ktck/api_service.dart';
 import 'package:ktck/chooseaguide/guidepage/mainguidepage.dart';
 import 'package:ktck/models/guide.dart';
 
@@ -12,71 +13,105 @@ class GuidesMoreScreen extends StatefulWidget {
 class _GuidesMoreScreenState extends State<GuidesMoreScreen> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  late Future<List<Guide>> _guidesFuture;
 
-  final List<Map<String, dynamic>> _guides = [
-    {
-      'name': 'Tuan Tran',
-      'location': 'Danang, Vietnam',
-      'rating': 5,
-      'reviews': 127,
-      'image': 'assets/images/explore/BestGuides/Tuan Tran 1.png',
-    },
-    {
-      'name': 'Emmy',
-      'location': 'Hanoi, Vietnam',
-      'rating': 4,
-      'reviews': 98,
-      'image': 'assets/images/explore/BestGuides/Emmy 1.png',
-    },
-    {
-      'name': 'Linh Hana',
-      'location': 'Danang, Vietnam',
-      'rating': 4,
-      'reviews': 115,
-      'image': 'assets/images/explore/BestGuides/Linh Ho 1.png',
-    },
-    {
-      'name': 'Khai Ho',
-      'location': 'Ho Chi Minh, Vietnam',
-      'rating': 4,
-      'reviews': 127,
-      'image': 'assets/images/explore/BestGuides/Khai 1.png',
-    },
-    {
-      'name': 'Tuan Tran',
-      'location': 'Danang, Vietnam',
-      'rating': 5,
-      'reviews': 127,
-      'image': 'assets/images/explore/BestGuides/Tuan Tran 1.png',
-    },
-    {
-      'name': 'Emmy',
-      'location': 'Hanoi, Vietnam',
-      'rating': 4,
-      'reviews': 98,
-      'image': 'assets/images/explore/BestGuides/Emmy 1.png',
-    },
-    {
-      'name': 'Linh Hana',
-      'location': 'Danang, Vietnam',
-      'rating': 4,
-      'reviews': 115,
-      'image': 'assets/images/explore/BestGuides/Linh Ho 1.png',
-    },
-    {
-      'name': 'Khai Ho',
-      'location': 'Ho Chi Minh, Vietnam',
-      'rating': 4,
-      'reviews': 127,
-      'image': 'assets/images/explore/BestGuides/Khai 1.png',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _guidesFuture = _fetchGuides();
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<List<Guide>> _fetchGuides({String search = ''}) async {
+    final initialResponse = await ApiService.getAllGuides(
+      page: 1,
+      limit: 1,
+      search: search,
+    );
+
+    final isSuccess = initialResponse['success'] == true ||
+        initialResponse['success'] == 1 ||
+        initialResponse['success'] == 'true';
+    if (!isSuccess) {
+      return [];
+    }
+
+    final total = _extractTotal(initialResponse);
+    if (total <= 0) {
+      return [];
+    }
+
+    final response = await ApiService.getAllGuides(
+      page: 1,
+      limit: total,
+      search: search,
+    );
+
+    final responseSuccess = response['success'] == true ||
+        response['success'] == 1 ||
+        response['success'] == 'true';
+    if (!responseSuccess) {
+      return [];
+    }
+
+    return _extractGuideItems(response)
+        .whereType<Map<String, dynamic>>()
+        .map(Guide.fromSummaryJson)
+        .toList();
+  }
+
+  int _extractTotal(Map<String, dynamic> response) {
+    final pagination = response['pagination'];
+    if (pagination is Map) {
+      final total = pagination['total'];
+      if (total is int) return total;
+      return int.tryParse(total?.toString() ?? '') ?? 0;
+    }
+
+    final data = response['data'];
+    if (data is List) {
+      return data.length;
+    }
+
+    return 0;
+  }
+
+  List<Map<String, dynamic>> _extractGuideItems(Map<String, dynamic> response) {
+    final candidates = [
+      response['data'],
+      response['guides'],
+      response['items'],
+      response['result'],
+    ];
+
+    for (final candidate in candidates) {
+      if (candidate is List) {
+        return candidate
+            .whereType<Map>()
+            .map(
+              (item) => Map<String, dynamic>.from(item.cast<String, dynamic>()),
+            )
+            .toList();
+      }
+      if (candidate is Map) {
+        return [Map<String, dynamic>.from(candidate.cast<String, dynamic>())];
+      }
+    }
+
+    return [];
+  }
+
+  Future<void> _applySearch(String value) async {
+    final query = value.trim();
+    setState(() {
+      _guidesFuture = _fetchGuides(search: query);
+    });
   }
 
   @override
@@ -86,11 +121,9 @@ class _GuidesMoreScreenState extends State<GuidesMoreScreen> {
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
-          // Hero header
           SliverToBoxAdapter(
             child: Stack(
               children: [
-                // Background image
                 Image.asset(
                   'assets/images/explore/BestGuides/670301139 1.png',
                   height: 200,
@@ -99,7 +132,6 @@ class _GuidesMoreScreenState extends State<GuidesMoreScreen> {
                   errorBuilder: (_, _, _) =>
                       Container(height: 200, color: Colors.grey[400]),
                 ),
-                // Dark overlay
                 Container(
                   height: 200,
                   decoration: BoxDecoration(
@@ -113,14 +145,12 @@ class _GuidesMoreScreenState extends State<GuidesMoreScreen> {
                     ),
                   ),
                 ),
-                // Content
                 SafeArea(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Back button
                         GestureDetector(
                           onTap: () => Navigator.pop(context),
                           child: Container(
@@ -147,7 +177,6 @@ class _GuidesMoreScreenState extends State<GuidesMoreScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        // Search bar
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
@@ -157,32 +186,40 @@ class _GuidesMoreScreenState extends State<GuidesMoreScreen> {
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Row(
-                            children: [
-                              Icon(
+                          child: TextField(
+                            controller: _searchController,
+                            textInputAction: TextInputAction.search,
+                            onSubmitted: _applySearch,
+                            onChanged: (_) => setState(() {}),
+                            style: const TextStyle(fontSize: 14),
+                            decoration: InputDecoration(
+                              prefixIcon: Icon(
                                 Icons.search,
                                 size: 18,
                                 color: Colors.grey[400],
                               ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: TextField(
-                                  controller: _searchController,
-                                  style: const TextStyle(fontSize: 14),
-                                  decoration: InputDecoration(
-                                    hintText:
-                                        'Hi, where do you want to explore?',
-                                    hintStyle: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey[400],
-                                    ),
-                                    border: InputBorder.none,
-                                    isDense: true,
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                ),
+                              hintText: 'Hi, where do you want to explore?',
+                              hintStyle: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[400],
                               ),
-                            ],
+                              suffixIcon: _searchController.text.isNotEmpty
+                                  ? IconButton(
+                                      icon: Icon(
+                                        Icons.close,
+                                        size: 18,
+                                        color: Colors.grey[400],
+                                      ),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        _applySearch('');
+                                      },
+                                    )
+                                  : null,
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding: EdgeInsets.zero,
+                            ),
                           ),
                         ),
                       ],
@@ -192,44 +229,55 @@ class _GuidesMoreScreenState extends State<GuidesMoreScreen> {
               ],
             ),
           ),
-
-          // Grid
           SliverPadding(
             padding: const EdgeInsets.all(16),
-            sliver: SliverGrid(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                final guide = _guides[index];
-                return _GuideCard(guide: guide);
-              }, childCount: _guides.length),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.78,
-              ),
-            ),
-          ),
-
-          // Pagination dots
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(3, (i) {
-                  return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    width: i == 0 ? 20 : 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: i == 0
-                          ? const Color(0xFF00C9A7)
-                          : Colors.grey[300],
-                      borderRadius: BorderRadius.circular(4),
+            sliver: FutureBuilder<List<Guide>>(
+              future: _guidesFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 40),
+                      child: Center(child: CircularProgressIndicator()),
                     ),
                   );
-                }),
-              ),
+                }
+
+                if (snapshot.hasError) {
+                  return SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 40),
+                      child: Text('Failed to load guides: ${snapshot.error}'),
+                    ),
+                  );
+                }
+
+                final guides = snapshot.data ?? const <Guide>[];
+                if (guides.isEmpty) {
+                  return const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 40),
+                      child: Center(child: Text('No guides available.')),
+                    ),
+                  );
+                }
+
+                return SliverGrid(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      return _GuideCard(guide: guides[index]);
+                    },
+                    childCount: guides.length,
+                  ),
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.78,
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -239,70 +287,35 @@ class _GuidesMoreScreenState extends State<GuidesMoreScreen> {
 }
 
 class _GuideCard extends StatelessWidget {
-  final Map<String, dynamic> guide;
+  final Guide guide;
 
   const _GuideCard({required this.guide});
 
   @override
   Widget build(BuildContext context) {
-    final imagePath = guide['image'] as String;
-    final imageWidget = imagePath.startsWith('http')
-        ? Image.network(
-            imagePath,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.person, size: 50, color: Colors.white),
-            ),
-          )
-        : Image.asset(
-            imagePath,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.person, size: 50, color: Colors.white),
-            ),
-          );
+    final imagePath = guide.avatarImage.isNotEmpty ? guide.avatarImage : guide.image;
 
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => Mainguidepage(
-              guide: Guide(
-                name: guide['name'],
-                location: guide['location'],
-                image: guide['image'],
-                rating: guide['rating'],
-                reviews: guide['reviews'],
-                description:
-                    'Professional guide based in ${guide['location']}. Committed to providing the best travel experience.',
-              ),
+        if (guide.id != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => Mainguidepage(guide: guide),
             ),
-          ),
-        );
+          );
+        }
       },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image
           Expanded(
             child: Stack(
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: imageWidget,
+                  child: _GuideCardImage(imagePath: imagePath),
                 ),
-                // Rating overlay
                 Positioned(
                   bottom: 8,
                   left: 8,
@@ -310,19 +323,20 @@ class _GuideCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        children: List.generate(5, (i) {
-                          return Icon(
-                            i < (guide['rating'] as int)
+                        children: List.generate(
+                          5,
+                          (i) => Icon(
+                            i < guide.rating.round()
                                 ? Icons.star
                                 : Icons.star_border,
                             color: Colors.amber,
                             size: 13,
-                          );
-                        }),
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 1),
                       Text(
-                        '${guide['reviews']} Reviews',
+                        '${guide.reviews} Reviews',
                         style: const TextStyle(
                           fontSize: 10,
                           color: Colors.white,
@@ -338,29 +352,23 @@ class _GuideCard extends StatelessWidget {
               ],
             ),
           ),
-
           const SizedBox(height: 6),
-
-          // Name
           Text(
-            guide['name'],
+            guide.name,
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: Colors.black87,
             ),
           ),
-
           const SizedBox(height: 2),
-
-          // Location
           Row(
             children: [
               const Icon(Icons.location_on, color: Color(0xFF00C9A7), size: 13),
               const SizedBox(width: 2),
               Expanded(
                 child: Text(
-                  guide['location'],
+                  guide.location,
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -369,6 +377,43 @@ class _GuideCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _GuideCardImage extends StatelessWidget {
+  final String imagePath;
+
+  const _GuideCardImage({required this.imagePath});
+
+  @override
+  Widget build(BuildContext context) {
+    if (imagePath.isEmpty) {
+      return _fallback();
+    }
+
+    final image = imagePath.startsWith('http')
+        ? Image.network(
+            imagePath,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            errorBuilder: (_, _, _) => _fallback(),
+          )
+        : Image.asset(
+            imagePath,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            errorBuilder: (_, _, _) => _fallback(),
+          );
+
+    return image;
+  }
+
+  Widget _fallback() {
+    return Container(
+      color: Colors.grey[300],
+      alignment: Alignment.center,
+      child: const Icon(Icons.person, size: 50, color: Colors.white),
     );
   }
 }
