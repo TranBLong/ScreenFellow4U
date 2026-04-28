@@ -359,7 +359,7 @@ class _BackgroundThumbnail extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
-      child: Container(
+      child: SizedBox(
         height: 180,
         width: double.infinity,
         child: Stack(
@@ -405,7 +405,7 @@ class _GuideImage extends StatelessWidget {
   const _GuideImage({
     required this.imagePath,
     required this.fit,
-    this.fallbackColor = const Color(0xFF90A4AE),
+    this.fallbackColor = Colors.transparent,
   });
 
   @override

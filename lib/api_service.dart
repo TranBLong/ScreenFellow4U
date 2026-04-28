@@ -195,7 +195,9 @@ class ApiService {
   }
 
   // GET featured guides
-  static Future<Map<String, dynamic>> getFeaturedGuides({int limit = 10}) async {
+  static Future<Map<String, dynamic>> getFeaturedGuides({
+    int limit = 10,
+  }) async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/api/guides/featured?limit=$limit'),
@@ -213,7 +215,9 @@ class ApiService {
   }
 
   // GET top-rated guides
-  static Future<Map<String, dynamic>> getTopRatedGuides({int limit = 10}) async {
+  static Future<Map<String, dynamic>> getTopRatedGuides({
+    int limit = 10,
+  }) async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/api/guides/top-rated?limit=$limit'),
@@ -246,8 +250,9 @@ class ApiService {
       if (minPrice != null) url += '&minPrice=$minPrice';
       if (maxPrice != null) url += '&maxPrice=$maxPrice';
       if (minRating != null) url += '&minRating=$minRating';
-      if (departure != null && departure.isNotEmpty)
+      if (departure != null && departure.isNotEmpty) {
         url += '&departure=$departure';
+      }
 
       final response = await http.get(
         Uri.parse(url),

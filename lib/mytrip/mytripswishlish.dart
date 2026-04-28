@@ -226,7 +226,7 @@ class _MyTripsWishlistScreenState extends State<MyTripsWishlist> {
                   height: 160,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
+                  errorBuilder: (_, _, _) => Container(
                     height: 160,
                     color: Colors.teal[100],
                     child: const Icon(

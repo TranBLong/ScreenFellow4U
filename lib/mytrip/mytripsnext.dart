@@ -439,7 +439,7 @@ class _MyTripsNextScreenState extends State<MyTripsNext> {
           child: CircleAvatar(
             radius: 24,
             backgroundImage: AssetImage(trip['avatar']),
-            onBackgroundImageError: (_, __) {},
+            onBackgroundImageError: (_, _) {},
           ),
         ),
         if (extra > 0)

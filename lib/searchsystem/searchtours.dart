@@ -92,7 +92,7 @@ class ToursSection extends StatelessWidget {
           physics: const NeverScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 16),
           itemCount: _tours.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 16),
+          separatorBuilder: (_, _) => const SizedBox(height: 16),
           itemBuilder: (context, index) {
             return _TourCard(tour: _tours[index]);
           },
@@ -156,7 +156,7 @@ class _TourCardState extends State<_TourCard> {
                     height: 180,
                     width: double.infinity,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
+                    errorBuilder: (_, _, _) => Container(
                       height: 180,
                       color: Colors.grey[300],
                       child: const Icon(

@@ -41,7 +41,9 @@ class ReviewsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayReviews = reviews?.isNotEmpty == true ? reviews! : _defaultReviews;
+    final displayReviews = reviews?.isNotEmpty == true
+        ? reviews!
+        : _defaultReviews;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,7 +83,7 @@ class ReviewsSection extends StatelessWidget {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: displayReviews.length,
-          separatorBuilder: (_, __) => const Divider(height: 28, thickness: 0.8),
+          separatorBuilder: (_, _) => const Divider(height: 28, thickness: 0.8),
           itemBuilder: (_, i) => _ReviewItem(review: displayReviews[i]),
         ),
       ],
@@ -157,7 +159,11 @@ class _StarRating extends StatelessWidget {
   final int maxStars;
   final double size;
 
-  const _StarRating({required this.rating, this.maxStars = 5, this.size = 15});
+  const _StarRating({
+    required this.rating,
+    this.maxStars = 5,
+    this.size = 14,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -185,5 +191,7 @@ ImageProvider _buildAvatarProvider(String avatarUrl) {
     return AssetImage(avatarUrl);
   }
 
-  return const AssetImage('assets/images/chooseaguide/main/reviews/Ellipse 11.png');
+  return const AssetImage(
+    'assets/images/chooseaguide/main/reviews/Ellipse 11.png',
+  );
 }

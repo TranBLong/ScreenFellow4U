@@ -220,7 +220,7 @@ class _MyTripsPastScreenState extends State<MyTripsPast> {
                   height: 150,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
+                  errorBuilder: (_, _, _) => Container(
                     height: 150,
                     color: Colors.teal[100],
                     child: const Icon(
@@ -302,7 +302,7 @@ class _MyTripsPastScreenState extends State<MyTripsPast> {
                   child: CircleAvatar(
                     radius: 24,
                     backgroundImage: AssetImage(trip['avatar']),
-                    onBackgroundImageError: (_, __) {},
+                    onBackgroundImageError: (_, _) {},
                   ),
                 ),
               ],

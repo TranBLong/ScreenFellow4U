@@ -26,9 +26,8 @@ class _SearchScreenState extends State<SearchScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => const SearchResultScreen(
-            destination: 'Danang, Vietnam',
-          ),
+          builder: (_) =>
+              const SearchResultScreen(destination: 'Danang, Vietnam'),
         ),
       );
     }
@@ -182,7 +181,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: _results.length,
-                    separatorBuilder: (_, __) =>
+                    separatorBuilder: (_, _) =>
                         Divider(height: 1, color: Colors.grey[200]),
                     itemBuilder: (context, index) {
                       final item = _results[index];

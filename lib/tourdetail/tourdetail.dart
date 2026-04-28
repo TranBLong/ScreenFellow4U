@@ -105,47 +105,44 @@ class _TourDetailScreenState extends State<TourDetailScreen> {
             final pricing = _listOfMaps(detail['pricing']);
             final reviews = _listOfMaps(detail['reviews']);
 
-            final title = _stringValue(tour, ['Title', 'title'], 'Untitled tour');
+            final title = _stringValue(tour, [
+              'Title',
+              'title',
+            ], 'Untitled tour');
             final price = _numberValue(tour, ['Price', 'price']);
-            final originalPrice = _numberValue(
-              tour,
-              ['OriginalPrice', 'originalPrice'],
-            );
+            final originalPrice = _numberValue(tour, [
+              'OriginalPrice',
+              'originalPrice',
+            ]);
             final rating = _numberValue(tour, ['Rating', 'rating']);
-            final totalReviews = _intValue(
-              tour,
-              ['TotalReviews', 'totalReviews'],
-            );
-            final provider = _stringValue(
-              tour,
-              ['ProviderName', 'providerName'],
-              'Unknown provider',
-            );
-            final itinerary = _stringValue(
-              tour,
-              ['Itinerary', 'itinerary'],
-              'No itinerary available',
-            );
-            final departureDate = _stringValue(
-              tour,
-              ['DepartureDate', 'departureDate'],
-              'N/A',
-            );
-            final departurePlace = _stringValue(
-              tour,
-              ['DeparturePlace', 'departurePlace'],
-              'N/A',
-            );
-            final duration = _stringValue(
-              tour,
-              ['Duration', 'duration'],
-              'N/A',
-            );
-            final description = _stringValue(
-              tour,
-              ['Description', 'description'],
-              'No description available',
-            );
+            final totalReviews = _intValue(tour, [
+              'TotalReviews',
+              'totalReviews',
+            ]);
+            final provider = _stringValue(tour, [
+              'ProviderName',
+              'providerName',
+            ], 'Unknown provider');
+            final itinerary = _stringValue(tour, [
+              'Itinerary',
+              'itinerary',
+            ], 'No itinerary available');
+            final departureDate = _stringValue(tour, [
+              'DepartureDate',
+              'departureDate',
+            ], 'N/A');
+            final departurePlace = _stringValue(tour, [
+              'DeparturePlace',
+              'departurePlace',
+            ], 'N/A');
+            final duration = _stringValue(tour, [
+              'Duration',
+              'duration',
+            ], 'N/A');
+            final description = _stringValue(tour, [
+              'Description',
+              'description',
+            ], 'No description available');
             final coverImage = _resolveCoverImage(tour, images);
 
             return Column(
@@ -195,7 +192,9 @@ class _TourDetailScreenState extends State<TourDetailScreen> {
                                     active: _isFavorite,
                                     activeColor: Colors.red,
                                     onTap: () {
-                                      setState(() => _isFavorite = !_isFavorite);
+                                      setState(
+                                        () => _isFavorite = !_isFavorite,
+                                      );
                                     },
                                   ),
                                   const SizedBox(width: 8),
@@ -374,22 +373,20 @@ class _TourDetailScreenState extends State<TourDetailScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            _stringValue(
-                                              review,
-                                              ['FullName', 'fullName'],
-                                              'Anonymous',
-                                            ),
+                                            _stringValue(review, [
+                                              'FullName',
+                                              'fullName',
+                                            ], 'Anonymous'),
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w600,
                                             ),
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            _stringValue(
-                                              review,
-                                              ['Comment', 'comment'],
-                                              '',
-                                            ),
+                                            _stringValue(review, [
+                                              'Comment',
+                                              'comment',
+                                            ], ''),
                                             style: TextStyle(
                                               color: Colors.grey[700],
                                             ),
@@ -469,7 +466,10 @@ class _TourDetailScreenState extends State<TourDetailScreen> {
         children: [
           Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[500])),
           const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontSize: 15, color: Colors.black87)),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 15, color: Colors.black87),
+          ),
         ],
       ),
     );
@@ -497,14 +497,14 @@ class _TourDetailScreenState extends State<TourDetailScreen> {
             height: height,
             width: double.infinity,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _buildImage(null, height: height),
+            errorBuilder: (_, _, _) => _buildImage(null, height: height),
           )
         : Image.asset(
             imageUrl,
             height: height,
             width: double.infinity,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _buildImage(null, height: height),
+            errorBuilder: (_, _, _) => _buildImage(null, height: height),
           );
 
     return ClipRRect(child: widget);

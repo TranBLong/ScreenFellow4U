@@ -572,3 +572,197 @@ exports.searchTours = async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 };
+
+// CREATE a new tour (POST /api/tours)
+exports.createTour = async (req, res) => {
+    try {
+        const {
+            title,
+            description,
+            price,
+            originalPrice,
+            duration,
+            departureDate,
+            departurePlace,
+            itinerary,
+            providerName,
+            coverImageUrl,
+            userID,
+            guideID,
+            locationID
+        } = req.body;
+
+        // Validate required fields
+        if (!title || title.trim() === '') {
+            return res.status(400).json({ success: false, error: 'Title is required' });
+        }
+        if (price === undefined || price === null) {
+            return res.status(400).json({ success: false, error: 'Price is required' });
+        }
+        if (isNaN(parseFloat(price)) || parseFloat(price) < 0) {
+            return res.status(400).json({ success: false, error: 'Price must be a non-negative number' });
+        }
+
+        const pool = await mssql.connect();
+        const request = pool.request();
+
+        const result = await request
+            .input('title',          mssql.NVarChar(255),       title.trim())
+            .input('description',    mssql.NVarChar(mssql.MAX), description || null)
+            .input('price',          mssql.Decimal(10, 2),      parseFloat(price))
+            .input('originalPrice',  mssql.Decimal(10, 2),      originalPrice ? parseFloat(originalPrice) : null)
+            .input('duration',       mssql.NVarChar(50),        duration || null)
+            .input('departureDate',  mssql.Date,                departureDate || null)
+            .input('departurePlace', mssql.NVarChar(255),       departurePlace || null)
+            .input('itinerary',      mssql.NVarChar(500),       itinerary || null)
+            .input('providerName',   mssql.NVarChar(255),       providerName || null)
+            .input('coverImageUrl',  mssql.NVarChar(500),       coverImageUrl || null)
+            .input('userID',         mssql.Int,                 userID || null)
+            .input('guideID',        mssql.Int,                 guideID || null)
+            .input('locationID',     mssql.Int,                 locationID || null)
+            .query(`
+                INSERT INTO Tours (
+                    Title, Description, Price, OriginalPrice, Duration,
+                    DepartureDate, DeparturePlace, Itinerary, ProviderName,
+                    CoverImageUrl, IsActive, Rating, TotalLikes, TotalReviews,
+                    CreatedAt, UpdatedAt, UserID, GuideID, LocationID
+                )
+                OUTPUT INSERTED.TourID
+                VALUES (
+                    @title, @description, @price, @originalPrice, @duration,
+                    @departureDate, @departurePlace, @itinerary, @providerName,
+                    @coverImageUrl, 1, 0, 0, 0,
+                    GETDATE(), GETDATE(), @userID, @guideID, @locationID
+                )
+            `);
+
+        const newTourId = result.recordset[0].TourID;
+
+        res.status(201).json({
+            success: true,
+            message: 'Tour created successfully',
+            data: { TourID: newTourId }
+        });
+    } catch (error) {
+        console.error('Error creating tour:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// UPDATE a tour (PUT /api/tours/:id)
+exports.updateTour = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {
+            title,
+            description,
+            price,
+            originalPrice,
+            duration,
+            departureDate,
+            departurePlace,
+            itinerary,
+            providerName,
+            coverImageUrl,
+            isActive,
+            userID,
+            guideID,
+            locationID
+        } = req.body;
+
+        // Validate required fields
+        if (!title || title.trim() === '') {
+            return res.status(400).json({ success: false, error: 'Title is required' });
+        }
+        if (price === undefined || price === null) {
+            return res.status(400).json({ success: false, error: 'Price is required' });
+        }
+        if (isNaN(parseFloat(price)) || parseFloat(price) < 0) {
+            return res.status(400).json({ success: false, error: 'Price must be a non-negative number' });
+        }
+
+        const pool = await mssql.connect();
+        const request = pool.request();
+
+        // Check tour exists
+        const checkResult = await request
+            .input('tourId', mssql.Int, id)
+            .query(`SELECT TourID FROM Tours WHERE TourID = @tourId`);
+
+        if (checkResult.recordset.length === 0) {
+            return res.status(404).json({ success: false, error: 'Tour not found' });
+        }
+
+        // Perform update — reuse request (tourId already input)
+        const updateResult = await request
+            .input('title',          mssql.NVarChar(255),       title.trim())
+            .input('description',    mssql.NVarChar(mssql.MAX), description || null)
+            .input('price',          mssql.Decimal(10, 2),      parseFloat(price))
+            .input('originalPrice',  mssql.Decimal(10, 2),      originalPrice ? parseFloat(originalPrice) : null)
+            .input('duration',       mssql.NVarChar(50),        duration || null)
+            .input('departureDate',  mssql.Date,                departureDate || null)
+            .input('departurePlace', mssql.NVarChar(255),       departurePlace || null)
+            .input('itinerary',      mssql.NVarChar(500),       itinerary || null)
+            .input('providerName',   mssql.NVarChar(255),       providerName || null)
+            .input('coverImageUrl',  mssql.NVarChar(500),       coverImageUrl || null)
+            .input('isActive',       mssql.Bit,                 isActive !== undefined ? (isActive ? 1 : 0) : 1)
+            .input('userID',         mssql.Int,                 userID || null)
+            .input('guideID',        mssql.Int,                 guideID || null)
+            .input('locationID',     mssql.Int,                 locationID || null)
+            .query(`
+                UPDATE Tours SET
+                    Title          = @title,
+                    Description    = @description,
+                    Price          = @price,
+                    OriginalPrice  = @originalPrice,
+                    Duration       = @duration,
+                    DepartureDate  = @departureDate,
+                    DeparturePlace = @departurePlace,
+                    Itinerary      = @itinerary,
+                    ProviderName   = @providerName,
+                    CoverImageUrl  = @coverImageUrl,
+                    IsActive       = @isActive,
+                    UpdatedAt      = GETDATE(),
+                    UserID         = @userID,
+                    GuideID        = @guideID,
+                    LocationID     = @locationID
+                WHERE TourID = @tourId
+            `);
+
+        if (updateResult.rowsAffected[0] === 0) {
+            return res.status(404).json({ success: false, error: 'Tour not found or no changes made' });
+        }
+
+        res.json({ success: true, message: 'Tour updated successfully' });
+    } catch (error) {
+        console.error('Error updating tour:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// DELETE a tour — soft delete by setting IsActive = 0 (DELETE /api/tours/:id)
+exports.deleteTour = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const pool = await mssql.connect();
+        const request = pool.request();
+
+        const result = await request
+            .input('tourId', mssql.Int, id)
+            .query(`
+                UPDATE Tours
+                SET IsActive = 0, UpdatedAt = GETDATE()
+                WHERE TourID = @tourId AND IsActive = 1
+            `);
+
+        if (result.rowsAffected[0] === 0) {
+            return res.status(404).json({ success: false, error: 'Tour not found or already deleted' });
+        }
+
+        res.json({ success: true, message: 'Tour deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting tour:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+};

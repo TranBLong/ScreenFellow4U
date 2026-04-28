@@ -48,7 +48,9 @@ class _BestGuidesWidgetState extends State<BestGuidesWidget> {
       if (candidate is List) {
         return candidate
             .whereType<Map>()
-            .map((item) => Map<String, dynamic>.from(item.cast<String, dynamic>()))
+            .map(
+              (item) => Map<String, dynamic>.from(item.cast<String, dynamic>()),
+            )
             .toList();
       }
       if (candidate is Map) {
@@ -124,7 +126,9 @@ class _BestGuidesWidgetState extends State<BestGuidesWidget> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               children: guides
-                  .map((guide) => _buildGuideCard(context: context, guide: guide))
+                  .map(
+                    (guide) => _buildGuideCard(context: context, guide: guide),
+                  )
                   .toList(),
             );
           },
@@ -137,7 +141,9 @@ class _BestGuidesWidgetState extends State<BestGuidesWidget> {
     required BuildContext context,
     required Guide guide,
   }) {
-    final imagePath = guide.avatarImage.isNotEmpty ? guide.avatarImage : guide.image;
+    final imagePath = guide.avatarImage.isNotEmpty
+        ? guide.avatarImage
+        : guide.image;
 
     return GestureDetector(
       onTap: () {
@@ -187,7 +193,10 @@ class _BestGuidesWidgetState extends State<BestGuidesWidget> {
               Expanded(
                 child: Text(
                   guide.location,
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF00CEA6)),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF00CEA6),
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -216,13 +225,13 @@ class _GuideCardImage extends StatelessWidget {
             imagePath,
             fit: BoxFit.cover,
             width: double.infinity,
-            errorBuilder: (_, __, ___) => _fallback(),
+            errorBuilder: (_, _, _) => _fallback(),
           )
         : Image.asset(
             imagePath,
             fit: BoxFit.cover,
             width: double.infinity,
-            errorBuilder: (_, __, ___) => _fallback(),
+            errorBuilder: (_, _, _) => _fallback(),
           );
 
     return widget;

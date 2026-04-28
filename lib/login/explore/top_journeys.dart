@@ -22,7 +22,7 @@ class _TopJourneysWidgetState extends State<TopJourneysWidget> {
   Future<void> _fetchTopJourneys() async {
     try {
       final response = await ApiService.getAllTours(limit: 5);
-      
+
       if (response['success'] == true) {
         final List<dynamic> toursData = response['data'] ?? [];
         setState(() {
@@ -32,7 +32,8 @@ class _TopJourneysWidgetState extends State<TopJourneysWidget> {
               'title': tour['Title'] ?? 'Unknown Tour',
               'date': _formatDate(tour['DepartureDate']),
               'duration': '${tour['Duration'] ?? 0} days',
-              'price': '\$${double.tryParse(tour['Price'].toString())?.toStringAsFixed(2) ?? "0.00"}',
+              'price':
+                  '\$${double.tryParse(tour['Price'].toString())?.toStringAsFixed(2) ?? "0.00"}',
               'image': tour['CoverImageUrl'] ?? '',
               'rating': (tour['Rating'] ?? 0).toInt(),
               'likes': tour['TotalLikes'] ?? 0,
@@ -54,8 +55,18 @@ class _TopJourneysWidgetState extends State<TopJourneysWidget> {
     try {
       final DateTime parsedDate = DateTime.parse(date.toString());
       final List<String> months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ];
       return '${months[parsedDate.month - 1]} ${parsedDate.day}, ${parsedDate.year}';
     } catch (e) {
@@ -129,7 +140,7 @@ class _TopJourneysWidgetState extends State<TopJourneysWidget> {
         height: 150,
         width: double.infinity,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
+        errorBuilder: (_, _, _) => Container(
           height: 150,
           color: Colors.grey[300],
           child: const Icon(Icons.image, size: 50, color: Colors.white),
@@ -141,7 +152,7 @@ class _TopJourneysWidgetState extends State<TopJourneysWidget> {
         height: 150,
         width: double.infinity,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
+        errorBuilder: (_, _, _) => Container(
           height: 150,
           color: Colors.grey[300],
           child: const Icon(Icons.image, size: 50, color: Colors.white),

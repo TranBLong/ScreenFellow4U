@@ -25,7 +25,7 @@ class _FeaturedToursWidgetState extends State<FeaturedToursWidget> {
   Future<void> _fetchFeaturedTours() async {
     try {
       final response = await ApiService.getAllTours(limit: 3);
-      
+
       if (response['success'] == true) {
         final List<dynamic> toursData = response['data'] ?? [];
         setState(() {
@@ -35,7 +35,8 @@ class _FeaturedToursWidgetState extends State<FeaturedToursWidget> {
               'title': tour['Title'] ?? 'Unknown Tour',
               'date': _formatDate(tour['DepartureDate']),
               'duration': '${tour['Duration'] ?? 0} days',
-              'price': '\$${double.tryParse(tour['Price'].toString())?.toStringAsFixed(2) ?? "0.00"}',
+              'price':
+                  '\$${double.tryParse(tour['Price'].toString())?.toStringAsFixed(2) ?? "0.00"}',
               'image': tour['CoverImageUrl'] ?? '',
               'rating': (tour['Rating'] ?? 0).toInt(),
               'likes': tour['TotalLikes'] ?? 0,
@@ -57,8 +58,18 @@ class _FeaturedToursWidgetState extends State<FeaturedToursWidget> {
     try {
       final DateTime parsedDate = DateTime.parse(date.toString());
       final List<String> months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ];
       return '${months[parsedDate.month - 1]} ${parsedDate.day}, ${parsedDate.year}';
     } catch (e) {
@@ -127,9 +138,7 @@ class _FeaturedToursWidgetState extends State<FeaturedToursWidget> {
                         'CoverImageUrl': tour['image'],
                         'DepartureDate': tour['date'],
                         'Duration': tour['duration'],
-                        'Price': tour['price'] == null
-                            ? null
-                            : tour['price'].toString().replaceAll('\$', ''),
+                        'Price': tour['price']?.toString().replaceAll('\$', ''),
                         'Rating': tour['rating'],
                         'TotalReviews': tour['likes'],
                         'ProviderName': 'Featured tours',
@@ -193,7 +202,7 @@ class _FeaturedToursWidgetState extends State<FeaturedToursWidget> {
         height: 160,
         width: double.infinity,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
+        errorBuilder: (_, _, _) => Container(
           height: 160,
           color: Colors.grey[300],
           child: const Icon(Icons.image, size: 50, color: Colors.white),
@@ -205,7 +214,7 @@ class _FeaturedToursWidgetState extends State<FeaturedToursWidget> {
         height: 160,
         width: double.infinity,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
+        errorBuilder: (_, _, _) => Container(
           height: 160,
           color: Colors.grey[300],
           child: const Icon(Icons.image, size: 50, color: Colors.white),
@@ -272,7 +281,10 @@ class _FeaturedToursWidgetState extends State<FeaturedToursWidget> {
                       const SizedBox(width: 6),
                       Text(
                         "$likes likes",
-                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),

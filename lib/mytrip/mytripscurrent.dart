@@ -331,7 +331,7 @@ class _MyTripsCurrentState extends State<MyTripsCurrent> {
                     backgroundImage: const AssetImage(
                       'assets/images/explore/BestGuides/Tuan Tran 1.png',
                     ),
-                    onBackgroundImageError: (_, __) {},
+                    onBackgroundImageError: (_, _) {},
                   ),
                 ),
               ],

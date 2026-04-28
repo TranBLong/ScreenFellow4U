@@ -2,6 +2,11 @@ const express = require('express');
 const router = express.Router();
 const tourController = require('../controllers/tourController');
 
+// CRUD endpoints (Create / Update / Delete)
+router.post('/', tourController.createTour);                          // POST   /api/tours
+router.put('/:id', tourController.updateTour);                        // PUT    /api/tours/:id
+router.delete('/:id', tourController.deleteTour);                     // DELETE /api/tours/:id
+
 // GET endpoints
 router.get('/', tourController.getAllTours);                          // GET /api/tours
 router.get('/featured', tourController.getFeaturedTours);            // GET /api/tours/featured

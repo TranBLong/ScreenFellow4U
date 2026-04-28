@@ -34,7 +34,9 @@ class MyExperiencesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final displayExperiences = experiences != null && experiences!.isNotEmpty
-        ? experiences!.map((exp) => _Experience.fromGuideExperience(exp)).toList()
+        ? experiences!
+              .map((exp) => _Experience.fromGuideExperience(exp))
+              .toList()
         : _experiences;
 
     return Column(
@@ -45,14 +47,12 @@ class MyExperiencesSection extends StatelessWidget {
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        ...displayExperiences
-            .map(
-              (exp) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _ExperienceCard(experience: exp),
-              ),
-            )
-            .toList(),
+        ...displayExperiences.map(
+          (exp) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _ExperienceCard(experience: exp),
+          ),
+        ),
       ],
     );
   }

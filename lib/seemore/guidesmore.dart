@@ -96,7 +96,7 @@ class _GuidesMoreScreenState extends State<GuidesMoreScreen> {
                   height: 200,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) =>
+                  errorBuilder: (_, _, _) =>
                       Container(height: 200, color: Colors.grey[400]),
                 ),
                 // Dark overlay
@@ -251,7 +251,7 @@ class _GuideCard extends StatelessWidget {
             imagePath,
             width: double.infinity,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => Container(
+            errorBuilder: (_, _, _) => Container(
               decoration: BoxDecoration(
                 color: Colors.grey[300],
                 borderRadius: BorderRadius.circular(12),
@@ -263,7 +263,7 @@ class _GuideCard extends StatelessWidget {
             imagePath,
             width: double.infinity,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => Container(
+            errorBuilder: (_, _, _) => Container(
               decoration: BoxDecoration(
                 color: Colors.grey[300],
                 borderRadius: BorderRadius.circular(12),
