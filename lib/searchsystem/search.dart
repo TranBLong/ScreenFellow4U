@@ -20,14 +20,13 @@ class _SearchScreenState extends State<SearchScreen> {
 
   List<String> _results = [];
 
-  void _openResultIfDanang(String value) {
-    final normalized = value.trim().toLowerCase();
-    if (normalized == 'danang, vietnam') {
+  void _openSearchResult(String value) {
+    final normalized = value.trim();
+    if (normalized.isNotEmpty) {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) =>
-              const SearchResultScreen(destination: 'Danang, Vietnam'),
+          builder: (_) => SearchResultScreen(destination: normalized),
         ),
       );
     }
@@ -115,7 +114,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         : null,
                   ),
                   onSubmitted: (value) {
-                    _openResultIfDanang(value);
+                    _openSearchResult(value);
                   },
                 ),
               ),
@@ -200,7 +199,7 @@ class _SearchScreenState extends State<SearchScreen> {
                           ),
                         ),
                         onTap: () {
-                          _openResultIfDanang(item);
+                          _openSearchResult(item);
                         },
                       );
                     },

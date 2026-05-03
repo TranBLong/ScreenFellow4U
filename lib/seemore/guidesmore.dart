@@ -186,40 +186,34 @@ class _GuidesMoreScreenState extends State<GuidesMoreScreen> {
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: TextField(
-                            controller: _searchController,
-                            textInputAction: TextInputAction.search,
-                            onSubmitted: _applySearch,
-                            onChanged: (_) => setState(() {}),
-                            style: const TextStyle(fontSize: 14),
-                            decoration: InputDecoration(
-                              prefixIcon: Icon(
+                          child: Row(
+                            children: [
+                              Icon(
                                 Icons.search,
                                 size: 18,
                                 color: Colors.grey[400],
                               ),
-                              hintText: 'Hi, where do you want to explore?',
-                              hintStyle: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey[400],
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: TextField(
+                                  controller: _searchController,
+                                  textInputAction: TextInputAction.search,
+                                  onSubmitted: _applySearch,
+                                  style: const TextStyle(fontSize: 14),
+                                  decoration: InputDecoration(
+                                    hintText:
+                                        'Hi, where do you want to explore?',
+                                    hintStyle: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey[400],
+                                    ),
+                                    border: InputBorder.none,
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                ),
                               ),
-                              suffixIcon: _searchController.text.isNotEmpty
-                                  ? IconButton(
-                                      icon: Icon(
-                                        Icons.close,
-                                        size: 18,
-                                        color: Colors.grey[400],
-                                      ),
-                                      onPressed: () {
-                                        _searchController.clear();
-                                        _applySearch('');
-                                      },
-                                    )
-                                  : null,
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.zero,
-                            ),
+                            ],
                           ),
                         ),
                       ],

@@ -1,54 +1,78 @@
 import 'package:flutter/material.dart';
 
+import 'package:ktck/api_service.dart';
+import 'package:ktck/models/tour.dart';
+import 'package:ktck/tourdetail/tourdetail.dart';
+
 // Widget độc lập, có thể dùng trong bất kỳ màn hình nào
-class ToursSection extends StatelessWidget {
+class ToursSection extends StatefulWidget {
   final String city;
 
   const ToursSection({super.key, this.city = 'Danang'});
 
-  final List<Map<String, dynamic>> _tours = const [
-    {
-      'title': 'Da Nang - Ba Na - Hoi An',
-      'date': 'Jan 30, 2020',
-      'days': 3,
-      'price': 400.00,
-      'likes': 1247,
-      'rating': 4,
-      'isFavorite': false,
-      'image': 'assets/images/search/tour/199641361 1-1.png',
-    },
-    {
-      'title': 'Melbourne - Sydney',
-      'date': 'Jan 30, 2020',
-      'days': 3,
-      'price': 600.00,
-      'likes': 1047,
-      'rating': 4,
-      'isFavorite': true,
-      'image': 'assets/images/search/tour/199641361 1-2.png',
-    },
-    {
-      'title': 'Hanoi - Ha Long Bay',
-      'date': 'Jan 30, 2020',
-      'days': 3,
-      'price': 300.00,
-      'likes': 1247,
-      'rating': 5,
-      'isFavorite': false,
-      'image':
-          'assets/images/search/tour/halong-bay-vietnam-from-above-gettyimages 1 (1).png',
-    },
-    {
-      'title': 'Da Nang - Ba Na - Hoi An',
-      'date': 'Jan 30, 2020',
-      'days': 3,
-      'price': 400.00,
-      'likes': 1247,
-      'rating': 4,
-      'isFavorite': false,
-      'image': 'assets/images/search/tour/199641361 1.png',
-    },
-  ];
+  @override
+  State<ToursSection> createState() => _ToursSectionState();
+}
+
+class _ToursSectionState extends State<ToursSection> {
+  List<Tour> _tours = [];
+  bool _isLoadingTours = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTours();
+  }
+
+  Future<void> _fetchTours() async {
+    setState(() => _isLoadingTours = true);
+    final response = await ApiService.getAllTours(search: widget.city);
+    
+    final success = response['success'];
+    final isSuccess = success == true || success == 1 || success == 'true';
+    if (!isSuccess) {
+      if (mounted) setState(() => _isLoadingTours = false);
+      return;
+    }
+
+    final rawItems = _extractItems(response);
+    final tours = rawItems
+        .whereType<Map<String, dynamic>>()
+        .map(Tour.fromJson)
+        .toList();
+
+    if (mounted) {
+      setState(() {
+        _tours = tours;
+        _isLoadingTours = false;
+      });
+    }
+  }
+
+  List<Map<String, dynamic>> _extractItems(Map<String, dynamic> response) {
+    final candidates = [
+      response['data'],
+      response['tours'],
+      response['items'],
+      response['result'],
+    ];
+
+    for (final candidate in candidates) {
+      if (candidate is List) {
+        return candidate
+            .whereType<Map>()
+            .map(
+              (item) => Map<String, dynamic>.from(item.cast<String, dynamic>()),
+            )
+            .toList();
+      }
+      if (candidate is Map) {
+        return [Map<String, dynamic>.from(candidate.cast<String, dynamic>())];
+      }
+    }
+
+    return [];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +86,7 @@ class ToursSection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Tours in $city',
+                'Tours in ${widget.city}',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -87,16 +111,28 @@ class ToursSection extends StatelessWidget {
         const SizedBox(height: 12),
 
         // Tour list
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: _tours.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 16),
-          itemBuilder: (context, index) {
-            return _TourCard(tour: _tours[index]);
-          },
-        ),
+        _isLoadingTours
+            ? const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            : _tours.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: Text('No tours found.'),
+                  )
+                : ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: _tours.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 16),
+                    itemBuilder: (context, index) {
+                      return _TourCard(tour: _tours[index]);
+                    },
+                  ),
 
         const SizedBox(height: 24),
       ],
@@ -105,7 +141,7 @@ class ToursSection extends StatelessWidget {
 }
 
 class _TourCard extends StatefulWidget {
-  final Map<String, dynamic> tour;
+  final Tour tour;
 
   const _TourCard({required this.tour});
 
@@ -120,14 +156,21 @@ class _TourCardState extends State<_TourCard> {
   @override
   void initState() {
     super.initState();
-    _isFavorite = widget.tour['isFavorite'] as bool;
+    _isFavorite = widget.tour.isFavorite;
   }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // TODO: navigate to tour detail
+        if (widget.tour.id != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => TourDetailScreen(tourId: widget.tour.id!),
+            ),
+          );
+        }
       },
       child: Container(
         decoration: BoxDecoration(
@@ -151,21 +194,7 @@ class _TourCardState extends State<_TourCard> {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(14),
                   ),
-                  child: Image.asset(
-                    widget.tour['image'],
-                    height: 180,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => Container(
-                      height: 180,
-                      color: Colors.grey[300],
-                      child: const Icon(
-                        Icons.image,
-                        size: 50,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
+                  child: _buildTourImage(widget.tour.coverImageUrl),
                 ),
 
                 // Bookmark icon top-right
@@ -201,7 +230,7 @@ class _TourCardState extends State<_TourCard> {
                       Row(
                         children: List.generate(5, (i) {
                           return Icon(
-                            i < (widget.tour['rating'] as int)
+                            i < widget.tour.rating.round()
                                 ? Icons.star
                                 : Icons.star_border,
                             color: Colors.amber,
@@ -211,7 +240,7 @@ class _TourCardState extends State<_TourCard> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${widget.tour['likes']} likes',
+                        '${widget.tour.totalLikes} likes',
                         style: const TextStyle(
                           fontSize: 11,
                           color: Colors.white,
@@ -239,7 +268,7 @@ class _TourCardState extends State<_TourCard> {
                     children: [
                       Expanded(
                         child: Text(
-                          widget.tour['title'],
+                          widget.tour.title,
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
@@ -280,7 +309,7 @@ class _TourCardState extends State<_TourCard> {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                widget.tour['date'],
+                                widget.tour.departureDate.isNotEmpty ? widget.tour.departureDate : 'N/A',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey[600],
@@ -299,7 +328,7 @@ class _TourCardState extends State<_TourCard> {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                '${widget.tour['days']} days',
+                                widget.tour.duration.isNotEmpty ? widget.tour.duration : 'N/A',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey[600],
@@ -312,7 +341,7 @@ class _TourCardState extends State<_TourCard> {
 
                       // Price
                       Text(
-                        '\$${widget.tour['price'].toStringAsFixed(2)}',
+                        '\$${widget.tour.price.toStringAsFixed(2)}',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -326,6 +355,40 @@ class _TourCardState extends State<_TourCard> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTourImage(String imagePath) {
+    if (imagePath.isEmpty) {
+      return _fallback();
+    }
+    return imagePath.startsWith('http')
+        ? Image.network(
+            imagePath,
+            height: 180,
+            width: double.infinity,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => _fallback(),
+          )
+        : Image.asset(
+            imagePath,
+            height: 180,
+            width: double.infinity,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => _fallback(),
+          );
+  }
+
+  Widget _fallback() {
+    return Container(
+      height: 180,
+      width: double.infinity,
+      color: Colors.grey[300],
+      child: const Icon(
+        Icons.image,
+        size: 50,
+        color: Colors.white,
       ),
     );
   }
