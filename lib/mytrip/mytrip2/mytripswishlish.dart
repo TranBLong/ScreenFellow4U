@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:ktck/login/explore/explore.dart';
-import 'package:ktck/mytrip/mytripscurrent.dart';
-import 'package:ktck/mytrip/mytripsnext.dart';
-import 'package:ktck/mytrip/mytripspast.dart';
+import 'package:ktck/mytrip/mytrip2/mytripscurrent.dart';
+import 'package:ktck/mytrip/mytrip2/mytripsnext.dart';
+import 'package:ktck/mytrip/mytrip2/mytripspast.dart';
+import 'package:ktck/mytrip/creaternewtrip/creaternewtrip.dart';
 
 class MyTripsWishlist extends StatefulWidget {
   const MyTripsWishlist({super.key});
@@ -69,7 +70,12 @@ class _MyTripsWishlistScreenState extends State<MyTripsWishlist> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const CreateNewTripScreen()),
+          );
+        },
         backgroundColor: const Color(0xFF00BFA5),
         child: const Icon(Icons.add, color: Colors.white, size: 28),
       ),

@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:ktck/login/explore/explore.dart';
-import 'package:ktck/mytrip/mytripscurrent.dart';
-import 'package:ktck/mytrip/mytripsnext.dart';
-import 'package:ktck/mytrip/mytripswishlish.dart';
+import 'package:ktck/mytrip/mytrip2/mytripsnext.dart';
+import 'package:ktck/mytrip/mytrip2/mytripspast.dart';
+import 'package:ktck/mytrip/mytrip2/mytripswishlish.dart';
+import 'package:ktck/mytrip/curreenttripdetail/curreenttripdetail.dart';
 
-class MyTripsPast extends StatefulWidget {
-  const MyTripsPast({super.key});
+class MyTripsCurrent extends StatefulWidget {
+  const MyTripsCurrent({super.key});
 
   @override
-  State<MyTripsPast> createState() => _MyTripsPastScreenState();
+  State<MyTripsCurrent> createState() => _MyTripsCurrentState();
 }
 
-class _MyTripsPastScreenState extends State<MyTripsPast> {
-  int _selectedTab = 2; // Past Trips selected
+class _MyTripsCurrentState extends State<MyTripsCurrent> {
+  int _selectedTab = 0;
   int _selectedNavIndex = 1;
 
   final List<String> _tabs = [
@@ -20,27 +21,6 @@ class _MyTripsPastScreenState extends State<MyTripsPast> {
     'Next Trips',
     'Past Trips',
     'Wish List',
-  ];
-
-  final List<Map<String, dynamic>> _trips = [
-    {
-      'title': 'Quoc Tu Giam Temple',
-      'image': 'assets/images/mytrip/mytrippast/van-mieu-quoc-tu-giam 1.png',
-      'location': 'Hanoi, Vietnam',
-      'date': 'Feb 2, 2020',
-      'time': '8:00 - 10:00',
-      'guide': 'Emmy',
-      'avatar': 'assets/images/explore/BestGuides/Emmy 1.png',
-    },
-    {
-      'title': 'Dinh Doc Lap',
-      'image': 'assets/images/mytrip/mytrippast/dinh-doc-lap 1.png',
-      'location': 'Ho Chi Minh, Vietnam',
-      'date': 'Feb 2, 2020',
-      'time': '8:00 - 10:00',
-      'guide': 'Khai Ho',
-      'avatar': 'assets/images/explore/BestGuides/Khai 1.png',
-    },
   ];
 
   @override
@@ -52,21 +32,12 @@ class _MyTripsPastScreenState extends State<MyTripsPast> {
           _buildHeader(),
           _buildTabBar(),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
-              itemCount: _trips.length,
-              itemBuilder: (context, index) => Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: _buildTripCard(_trips[index]),
-              ),
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [_buildTripCard()],
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: const Color(0xFF00BFA5),
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
       ),
       bottomNavigationBar: _buildBottomNav(),
     );
@@ -88,7 +59,7 @@ class _MyTripsPastScreenState extends State<MyTripsPast> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Colors.black.withOpacity(0.35),
+              Colors.black.withOpacity(0.3),
               Colors.black.withOpacity(0.1),
             ],
           ),
@@ -142,16 +113,20 @@ class _MyTripsPastScreenState extends State<MyTripsPast> {
             child: GestureDetector(
               onTap: () {
                 if (index == 0) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const MyTripsCurrent()),
-                  );
+                  setState(() => _selectedTab = index);
                   return;
                 }
                 if (index == 1) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const MyTripsNext()),
+                  );
+                  return;
+                }
+                if (index == 2) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MyTripsPast()),
                   );
                   return;
                 }
@@ -192,9 +167,16 @@ class _MyTripsPastScreenState extends State<MyTripsPast> {
     );
   }
 
-  Widget _buildTripCard(Map<String, dynamic> trip) {
-    return Container(
-      decoration: BoxDecoration(
+  Widget _buildTripCard() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CurrentTripDetailScreen()),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
@@ -208,7 +190,7 @@ class _MyTripsPastScreenState extends State<MyTripsPast> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Trip image with location label
+          // Image with overlay badge
           Stack(
             children: [
               ClipRRect(
@@ -216,22 +198,52 @@ class _MyTripsPastScreenState extends State<MyTripsPast> {
                   top: Radius.circular(16),
                 ),
                 child: Image.asset(
-                  trip['image'],
-                  height: 150,
+                  'assets/images/mytrip/mytripcurrent/dragon-bridge-03 2.png',
+                  height: 160,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => Container(
-                    height: 150,
-                    color: Colors.teal[100],
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    height: 160,
+                    color: Colors.orange[200],
                     child: const Icon(
                       Icons.image,
-                      size: 50,
+                      size: 60,
                       color: Colors.white,
                     ),
                   ),
                 ),
               ),
-              // Location label bottom-left
+              // Mark Finished button
+              Positioned(
+                top: 12,
+                left: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.92),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.check, size: 16, color: Colors.black87),
+                      SizedBox(width: 4),
+                      Text(
+                        'Mark Finished',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Location label
               Positioned(
                 bottom: 10,
                 left: 12,
@@ -240,18 +252,18 @@ class _MyTripsPastScreenState extends State<MyTripsPast> {
                     const Icon(
                       Icons.location_on,
                       color: Colors.white,
-                      size: 15,
+                      size: 16,
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      trip['location'],
+                      'Da Nang, Vietnam',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.w500,
                         shadows: [
                           Shadow(
-                            color: Colors.black.withOpacity(0.6),
+                            color: Colors.black.withOpacity(0.5),
                             blurRadius: 4,
                           ),
                         ],
@@ -263,45 +275,70 @@ class _MyTripsPastScreenState extends State<MyTripsPast> {
             ],
           ),
 
-          // Card body
+          // Card content
           Padding(
             padding: const EdgeInsets.all(14),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Info column
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        trip['title'],
-                        style: const TextStyle(
-                          fontSize: 15,
+                      const Text(
+                        'Dragon Bridge Trip',
+                        style: TextStyle(
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 8),
                       _buildInfoRow(
                         Icons.calendar_today_outlined,
-                        trip['date'],
+                        'Jan 30, 2020',
                       ),
-                      const SizedBox(height: 3),
-                      _buildInfoRow(Icons.access_time, trip['time']),
-                      const SizedBox(height: 3),
-                      _buildInfoRow(Icons.person_outline, trip['guide']),
+                      const SizedBox(height: 4),
+                      _buildInfoRow(Icons.access_time, '13:00 - 15:00'),
+                      const SizedBox(height: 4),
+                      _buildInfoRow(Icons.person_outline, 'Tuan Tran'),
+                      const SizedBox(height: 12),
+                      // Detail button
+                      OutlinedButton.icon(
+                        onPressed: () {},
+                        icon: const Icon(Icons.info_outline, size: 16),
+                        label: const Text('Detail'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF00BFA5),
+                          side: const BorderSide(color: Color(0xFF00BFA5)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 6,
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
+
                 // Avatar
+                const SizedBox(width: 12),
                 CircleAvatar(
-                  radius: 26,
+                  radius: 28,
                   backgroundColor: const Color(0xFF00BFA5),
                   child: CircleAvatar(
-                    radius: 24,
-                    backgroundImage: AssetImage(trip['avatar']),
+                    radius: 26,
+                    backgroundImage: const AssetImage(
+                      'assets/images/explore/BestGuides/Tuan Tran 1.png',
+                    ),
                     onBackgroundImageError: (_, _) {},
                   ),
                 ),
@@ -310,15 +347,16 @@ class _MyTripsPastScreenState extends State<MyTripsPast> {
           ),
         ],
       ),
+    ),
     );
   }
 
   Widget _buildInfoRow(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: Colors.grey[500]),
-        const SizedBox(width: 5),
-        Text(text, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+        Icon(icon, size: 15, color: Colors.grey[500]),
+        const SizedBox(width: 6),
+        Text(text, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
       ],
     );
   }
@@ -331,6 +369,7 @@ class _MyTripsPastScreenState extends State<MyTripsPast> {
       Icons.notifications_none,
       Icons.person_outline,
     ];
+
     final labels = ['', 'My Trips', '', '', ''];
 
     return Container(

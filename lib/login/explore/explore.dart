@@ -1,11 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'top_journeys.dart';
 import 'best_guides.dart';
 import 'top_experiences.dart';
 import 'featured_tours.dart';
 import 'travel_news.dart';
 import 'package:ktck/searchsystem/search.dart';
-import 'package:ktck/mytrip/mytripscurrent.dart';
+import 'package:ktck/mytrip/mytrip2/mytripscurrent.dart';
 
 class Explore extends StatelessWidget {
   const Explore({super.key});

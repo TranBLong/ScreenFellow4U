@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:ktck/login/explore/explore.dart';
-import 'package:ktck/mytrip/mytripscurrent.dart';
-import 'package:ktck/mytrip/mytripspast.dart';
-import 'package:ktck/mytrip/mytripswishlish.dart';
+import 'package:ktck/mytrip/mytrip2/mytripscurrent.dart';
+import 'package:ktck/mytrip/mytrip2/mytripsnext.dart';
+import 'package:ktck/mytrip/mytrip2/mytripswishlish.dart';
 
-class MyTripsNext extends StatefulWidget {
-  const MyTripsNext({super.key});
+class MyTripsPast extends StatefulWidget {
+  const MyTripsPast({super.key});
 
   @override
-  State<MyTripsNext> createState() => _MyTripsNextScreenState();
+  State<MyTripsPast> createState() => _MyTripsPastScreenState();
 }
 
-class _MyTripsNextScreenState extends State<MyTripsNext> {
-  int _selectedTab = 1; // Next Trips selected
+class _MyTripsPastScreenState extends State<MyTripsPast> {
+  int _selectedTab = 2; // Past Trips selected
   int _selectedNavIndex = 1;
 
   final List<String> _tabs = [
@@ -24,41 +24,22 @@ class _MyTripsNextScreenState extends State<MyTripsNext> {
 
   final List<Map<String, dynamic>> _trips = [
     {
-      'title': 'Ho Guom Trip',
-      'image': 'assets/images/mytrip/mytripnext/dragon-bridge-03 2.png',
+      'title': 'Quoc Tu Giam Temple',
+      'image': 'assets/images/mytrip/mytrippast/van-mieu-quoc-tu-giam 1.png',
       'location': 'Hanoi, Vietnam',
       'date': 'Feb 2, 2020',
       'time': '8:00 - 10:00',
       'guide': 'Emmy',
       'avatar': 'assets/images/explore/BestGuides/Emmy 1.png',
-      'status': null,
-      'extraAvatars': 0,
-      'actions': ['Detail', 'Chat', 'Pay'],
     },
     {
-      'title': 'Ho Chi Minh Mausoleum',
-      'image': 'assets/images/mytrip/mytripnext/dragon-bridge-03 2-1.png',
-      'location': 'Hanoi, Vietnam',
-      'date': 'Feb 2, 2020',
-      'time': '8:00 - 10:00',
-      'guide': 'Emmy',
-      'avatar': 'assets/images/explore/BestGuides/Emmy 1.png',
-      'status': 'Waiting',
-      'extraAvatars': 0,
-      'actions': ['Detail'],
-    },
-    {
-      'title': 'Duc Ba Church',
-      'image':
-          'assets/images/mytrip/mytripnext/20161021091303-nha-tho-duc-ba-gody (7) 1.png',
+      'title': 'Dinh Doc Lap',
+      'image': 'assets/images/mytrip/mytrippast/dinh-doc-lap 1.png',
       'location': 'Ho Chi Minh, Vietnam',
       'date': 'Feb 2, 2020',
       'time': '8:00 - 10:00',
-      'guide': 'Waiting for offers',
+      'guide': 'Khai Ho',
       'avatar': 'assets/images/explore/BestGuides/Khai 1.png',
-      'status': 'Bidding',
-      'extraAvatars': 3,
-      'actions': ['Detail', 'Chat'],
     },
   ];
 
@@ -167,10 +148,10 @@ class _MyTripsNextScreenState extends State<MyTripsNext> {
                   );
                   return;
                 }
-                if (index == 2) {
+                if (index == 1) {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const MyTripsPast()),
+                    MaterialPageRoute(builder: (_) => const MyTripsNext()),
                   );
                   return;
                 }
@@ -227,7 +208,7 @@ class _MyTripsNextScreenState extends State<MyTripsNext> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Trip image with overlays
+          // Trip image with location label
           Stack(
             children: [
               ClipRRect(
@@ -236,11 +217,11 @@ class _MyTripsNextScreenState extends State<MyTripsNext> {
                 ),
                 child: Image.asset(
                   trip['image'],
-                  height: 140,
+                  height: 150,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    height: 140,
+                  errorBuilder: (_, _, _) => Container(
+                    height: 150,
                     color: Colors.teal[100],
                     child: const Icon(
                       Icons.image,
@@ -250,59 +231,7 @@ class _MyTripsNextScreenState extends State<MyTripsNext> {
                   ),
                 ),
               ),
-              // Status badge (Waiting / Bidding)
-              if (trip['status'] != null)
-                Positioned(
-                  top: 12,
-                  left: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: trip['status'] == 'Bidding'
-                          ? const Color(0xFF5C6BC0)
-                          : Colors.grey[600],
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      trip['status'],
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              // More options button (first card only)
-              if (trip['status'] == null)
-                Positioned(
-                  top: 10,
-                  right: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _Dot(),
-                        SizedBox(width: 3),
-                        _Dot(),
-                        SizedBox(width: 3),
-                        _Dot(),
-                      ],
-                    ),
-                  ),
-                ),
-              // Location label
+              // Location label bottom-left
               Positioned(
                 bottom: 10,
                 left: 12,
@@ -338,9 +267,9 @@ class _MyTripsNextScreenState extends State<MyTripsNext> {
           Padding(
             padding: const EdgeInsets.all(14),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Info
+                // Info column
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -362,15 +291,20 @@ class _MyTripsNextScreenState extends State<MyTripsNext> {
                       _buildInfoRow(Icons.access_time, trip['time']),
                       const SizedBox(height: 3),
                       _buildInfoRow(Icons.person_outline, trip['guide']),
-                      const SizedBox(height: 12),
-                      // Action buttons
-                      _buildActionButtons(trip['actions']),
                     ],
                   ),
                 ),
-                const SizedBox(width: 10),
-                // Avatar(s)
-                _buildAvatarStack(trip),
+                const SizedBox(width: 12),
+                // Avatar
+                CircleAvatar(
+                  radius: 26,
+                  backgroundColor: const Color(0xFF00BFA5),
+                  child: CircleAvatar(
+                    radius: 24,
+                    backgroundImage: AssetImage(trip['avatar']),
+                    onBackgroundImageError: (_, _) {},
+                  ),
+                ),
               ],
             ),
           ),
@@ -385,87 +319,6 @@ class _MyTripsNextScreenState extends State<MyTripsNext> {
         Icon(icon, size: 14, color: Colors.grey[500]),
         const SizedBox(width: 5),
         Text(text, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-      ],
-    );
-  }
-
-  Widget _buildActionButtons(List<dynamic> actions) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 6,
-      children: actions.map<Widget>((action) {
-        return OutlinedButton.icon(
-          onPressed: () {},
-          icon: Icon(_actionIcon(action), size: 14),
-          label: Text(action),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF00BFA5),
-            side: const BorderSide(color: Color(0xFF00BFA5), width: 1),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            textStyle: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  IconData _actionIcon(String action) {
-    switch (action) {
-      case 'Chat':
-        return Icons.chat_bubble_outline;
-      case 'Pay':
-        return Icons.payment_outlined;
-      default:
-        return Icons.info_outline;
-    }
-  }
-
-  Widget _buildAvatarStack(Map<String, dynamic> trip) {
-    final int extra = trip['extraAvatars'] as int;
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        CircleAvatar(
-          radius: 26,
-          backgroundColor: const Color(0xFF00BFA5),
-          child: CircleAvatar(
-            radius: 24,
-            backgroundImage: AssetImage(trip['avatar']),
-            onBackgroundImageError: (_, _) {},
-          ),
-        ),
-        if (extra > 0)
-          Positioned(
-            right: -6,
-            bottom: 0,
-            child: Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                color: const Color(0xFF00BFA5),
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 1.5),
-              ),
-              child: Center(
-                child: Text(
-                  '+$extra',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ),
       ],
     );
   }
@@ -538,22 +391,6 @@ class _MyTripsNextScreenState extends State<MyTripsNext> {
             }),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _Dot extends StatelessWidget {
-  const _Dot();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 4,
-      height: 4,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
       ),
     );
   }

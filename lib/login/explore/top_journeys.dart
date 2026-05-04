@@ -21,12 +21,24 @@ class _TopJourneysWidgetState extends State<TopJourneysWidget> {
 
   Future<void> _fetchTopJourneys() async {
     try {
-      final response = await ApiService.getAllTours(limit: 5);
+      // Fetch a larger set to ensure we find the highest rated ones
+      final response = await ApiService.getAllTours(limit: 50);
 
       if (response['success'] == true) {
         final List<dynamic> toursData = response['data'] ?? [];
+        
+        // Sort by Rating descending
+        toursData.sort((a, b) {
+          final double rA = double.tryParse(a['Rating']?.toString() ?? '0') ?? 0;
+          final double rB = double.tryParse(b['Rating']?.toString() ?? '0') ?? 0;
+          return rB.compareTo(rA);
+        });
+
+        // Take the top 5
+        final top5 = toursData.take(5).toList();
+
         setState(() {
-          _topJourneys = toursData.map((tour) {
+          _topJourneys = top5.map((tour) {
             return {
               'TourID': tour['TourID'],
               'title': tour['Title'] ?? 'Unknown Tour',
