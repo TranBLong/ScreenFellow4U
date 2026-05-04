@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../travelnew/travelnewdetail.dart';
 
 class TravelNewsWidget extends StatelessWidget {
   const TravelNewsWidget({super.key});
@@ -32,6 +33,14 @@ class TravelNewsWidget extends StatelessWidget {
             date: "Feb 5, 2020",
             image:
                 "assets/images/explore/TravelNews/cungvanhoathieunhi-danang-vntrip 1.png",
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const TravelNewsDetailScreen(),
+                ),
+              );
+            },
           ),
           const SizedBox(height: 16),
           _buildNewsItem(
@@ -56,10 +65,13 @@ class TravelNewsWidget extends StatelessWidget {
     required String title,
     required String date,
     required String image,
+    VoidCallback? onTap,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
         Text(
           title,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
@@ -76,7 +88,8 @@ class TravelNewsWidget extends StatelessWidget {
             fit: BoxFit.cover,
           ),
         ),
-      ],
+        ],
+      ),
     );
   }
 }
