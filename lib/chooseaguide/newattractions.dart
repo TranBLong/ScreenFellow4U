@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ktck/chooseaguide/addnewplace.dart';
 
@@ -42,7 +43,9 @@ class _NewAttractionsScreenState extends State<NewAttractionsScreen> {
       });
     }
     _searchController.clear();
-    _focusNode.requestFocus();
+    if (!kIsWeb) {
+      _focusNode.requestFocus();
+    }
 
     if (place.toLowerCase() == 'cong coffee') {
       Navigator.push(
@@ -133,7 +136,7 @@ class _NewAttractionsScreenState extends State<NewAttractionsScreen> {
             child: TextField(
               controller: _searchController,
               focusNode: _focusNode,
-              autofocus: true,
+              autofocus: !kIsWeb,
               style: const TextStyle(fontSize: 15, color: Colors.black87),
               decoration: const InputDecoration(
                 hintText: 'Search places...',

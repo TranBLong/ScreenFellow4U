@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ktck/searchsystem/searchresult.dart';
 
@@ -36,9 +37,13 @@ class _SearchScreenState extends State<SearchScreen> {
   void initState() {
     super.initState();
     // Auto-focus keyboard khi mở màn hình
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _focusNode.requestFocus();
-    });
+    if (!kIsWeb) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _focusNode.requestFocus();
+        }
+      });
+    }
 
     _controller.addListener(() {
       final query = _controller.text.trim().toLowerCase();

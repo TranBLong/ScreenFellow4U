@@ -1,7 +1,67 @@
 import 'package:flutter/material.dart';
+import 'package:ktck/mytrip/creaternewtrip/creaternewtrip.dart';
+import 'package:ktck/mytrip/database/trip_database.dart';
+import 'package:ktck/mytrip/models/trip.dart';
 
-class CurrentTripDetailScreen extends StatelessWidget {
-  const CurrentTripDetailScreen({super.key});
+class CurrentTripDetailScreen extends StatefulWidget {
+  final Trip trip;
+
+  const CurrentTripDetailScreen({super.key, required this.trip});
+
+  @override
+  State<CurrentTripDetailScreen> createState() => _CurrentTripDetailScreenState();
+}
+
+class _CurrentTripDetailScreenState extends State<CurrentTripDetailScreen> {
+  late Trip _trip;
+
+  @override
+  void initState() {
+    super.initState();
+    _trip = widget.trip;
+  }
+
+  Future<void> _editTrip() async {
+    final changed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreateNewTripScreen(trip: _trip),
+      ),
+    );
+    if (changed == true) {
+      final updated = await TripDatabase.instance.readTrip(_trip.id!);
+      if (updated != null && mounted) {
+        setState(() => _trip = updated);
+      }
+    }
+  }
+
+  Future<void> _deleteTrip() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete Trip'),
+          content: const Text('Do you want to delete this trip?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed == true) {
+      await TripDatabase.instance.delete(_trip.id!);
+      if (!mounted) return;
+      Navigator.pop(context, true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -10,7 +70,6 @@ class CurrentTripDetailScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Header Bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Stack(
@@ -19,7 +78,7 @@ class CurrentTripDetailScreen extends StatelessWidget {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: GestureDetector(
-                      onTap: () => Navigator.pop(context),
+                      onTap: () => Navigator.pop(context, false),
                       child: const Icon(Icons.close, size: 28),
                     ),
                   ),
@@ -33,8 +92,6 @@ class CurrentTripDetailScreen extends StatelessWidget {
                 ],
               ),
             ),
-
-            // Content
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
@@ -53,7 +110,6 @@ class CurrentTripDetailScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Image Header with Avatar
                       Stack(
                         clipBehavior: Clip.none,
                         children: [
@@ -77,7 +133,6 @@ class CurrentTripDetailScreen extends StatelessWidget {
                               ),
                             ),
                           ),
-                          // Dark gradient at bottom for text
                           Positioned(
                             bottom: 0,
                             left: 0,
@@ -96,19 +151,14 @@ class CurrentTripDetailScreen extends StatelessWidget {
                               ),
                             ),
                           ),
-                          // Location label
                           Positioned(
                             bottom: 12,
                             left: 16,
                             child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.location_on,
-                                  color: Colors.white,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 4),
-                                const Text(
+                              children: const [
+                                Icon(Icons.location_on, color: Colors.white, size: 16),
+                                SizedBox(width: 4),
+                                Text(
                                   'Danang, Vietnam',
                                   style: TextStyle(
                                     color: Colors.white,
@@ -119,7 +169,6 @@ class CurrentTripDetailScreen extends StatelessWidget {
                               ],
                             ),
                           ),
-                          // Avatar overlapping the image bottom edge
                           Positioned(
                             bottom: -24,
                             right: 24,
@@ -131,35 +180,32 @@ class CurrentTripDetailScreen extends StatelessWidget {
                                   width: 3,
                                 ),
                               ),
-                              child: CircleAvatar(
+                              child: const CircleAvatar(
                                 radius: 32,
-                                backgroundImage: const AssetImage(
+                                backgroundImage: AssetImage(
                                   'assets/images/explore/BestGuides/Emmy 1.png',
                                 ),
-                                onBackgroundImageError: (_, _) {},
                               ),
                             ),
                           ),
                         ],
                       ),
-                      
-                      const SizedBox(height: 32), // Space for the overlapping avatar
-                      
-                      // Details Section
+                      const SizedBox(height: 32),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildDetailRow('Date', 'Feb 2, 2020'),
+                            _buildDetailRow('Location', _trip.location),
                             const SizedBox(height: 12),
-                            _buildDetailRow('Time', '8:00AM - 10:00AM'),
+                            _buildDetailRow('Date', _trip.date),
                             const SizedBox(height: 12),
-                            _buildDetailRow('Guide', 'Emmy', valueColor: const Color(0xFF00C9A7)),
+                            _buildDetailRow('Time', '${_trip.timeFrom} - ${_trip.timeTo}'),
                             const SizedBox(height: 12),
-                            _buildDetailRow('Number of Travelers', '2'),
+                            _buildDetailRow('Guide', _trip.language, valueColor: const Color(0xFF00C9A7)),
+                            const SizedBox(height: 12),
+                            _buildDetailRow('Travelers', '${_trip.travelers}'),
                             const SizedBox(height: 16),
-                            
                             const Text(
                               'Attractions',
                               style: TextStyle(
@@ -169,21 +215,15 @@ class CurrentTripDetailScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            
-                            // Chips
                             Wrap(
                               spacing: 8,
                               runSpacing: 8,
-                              children: [
-                                _buildAttractionChip('Ho Guom'),
-                                _buildAttractionChip('Ho Hoan Kiem'),
-                                _buildAttractionChip('Pho 12 Pho Kim Ma'),
-                              ],
+                              children: _trip.attractions
+                                  .split(',')
+                                  .map((item) => _buildAttractionChip(item.trim()))
+                                  .toList(),
                             ),
-                            
                             const SizedBox(height: 24),
-                            
-                            // Fee
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -196,7 +236,7 @@ class CurrentTripDetailScreen extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  '\$20.00',
+                                  '\$${_trip.fee.toStringAsFixed(2)}',
                                   style: const TextStyle(
                                     fontSize: 22,
                                     fontWeight: FontWeight.bold,
@@ -205,47 +245,48 @@ class CurrentTripDetailScreen extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 24),
                           ],
-                        ),
-                      ),
-                      
-                      // Bottom Button Area
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            top: BorderSide(
-                              color: Colors.grey[200]!,
-                              width: 1,
-                            ),
-                          ),
-                        ),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: OutlinedButton.icon(
-                            onPressed: () {},
-                            icon: const Icon(Icons.check, size: 18, color: Colors.black87),
-                            label: const Text(
-                              'Mark Finished',
-                              style: TextStyle(
-                                color: Colors.black87,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: Colors.grey[300]!, width: 1),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                            ),
-                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _deleteTrip,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.redAccent,
+                        side: const BorderSide(color: Colors.redAccent),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text('Delete'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _editTrip,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF00C9A7),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text('Edit'),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -254,13 +295,13 @@ class CurrentTripDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(String label, String value, {Color? valueColor}) {
+  Widget _buildDetailRow(String title, String value, {Color? valueColor}) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          flex: 2,
           child: Text(
-            label,
+            title,
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -269,13 +310,12 @@ class CurrentTripDetailScreen extends StatelessWidget {
           ),
         ),
         Expanded(
-          flex: 3,
           child: Text(
             value,
+            textAlign: TextAlign.right,
             style: TextStyle(
               fontSize: 14,
-              color: valueColor ?? Colors.grey[600],
-              fontWeight: valueColor != null ? FontWeight.w500 : FontWeight.normal,
+              color: valueColor ?? Colors.grey[700],
             ),
           ),
         ),
@@ -283,28 +323,11 @@ class CurrentTripDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAttractionChip(String name) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey[300]!),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.location_on, size: 14, color: Color(0xFF00C9A7)),
-          const SizedBox(width: 4),
-          Text(
-            name,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[700],
-            ),
-          ),
-        ],
-      ),
+  Widget _buildAttractionChip(String title) {
+    if (title.isEmpty) return const SizedBox();
+    return Chip(
+      label: Text(title),
+      backgroundColor: Colors.grey[100],
     );
   }
 }
