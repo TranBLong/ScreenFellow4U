@@ -1,8 +1,41 @@
 import 'package:flutter/material.dart';
 import '../../travelnew/travelnewdetail.dart';
+import '../../models/travel_news.dart';
+import '../../travel_news_service.dart';
+import '../../seemore/travelnewmore.dart';
 
-class TravelNewsWidget extends StatelessWidget {
+class TravelNewsWidget extends StatefulWidget {
   const TravelNewsWidget({super.key});
+
+  @override
+  State<TravelNewsWidget> createState() => _TravelNewsWidgetState();
+}
+
+class _TravelNewsWidgetState extends State<TravelNewsWidget> {
+  List<TravelNews> _news = [];
+  bool _isLoading = true;
+  String _error = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTravelNews();
+  }
+
+  Future<void> _loadTravelNews() async {
+    try {
+      final news = await TravelNewsService.fetchTravelNews();
+      setState(() {
+        _news = news;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,52 +46,71 @@ class TravelNewsWidget extends StatelessWidget {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text(
+            children: [
+              const Text(
                 "Travel News",
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              Text(
-                "SEE MORE",
-                style: TextStyle(
-                  color: Color(0xFF00CEA6),
-                  fontWeight: FontWeight.w600,
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const TravelNewMoreScreen(),
+                    ),
+                  );
+                },
+                child: const Text(
+                  "SEE MORE",
+                  style: TextStyle(
+                    color: Color(0xFF00CEA6),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          _buildNewsItem(
-            title: "New Destination in Danang City",
-            date: "Feb 5, 2020",
-            image:
-                "assets/images/explore/TravelNews/cungvanhoathieunhi-danang-vntrip 1.png",
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const TravelNewsDetailScreen(),
+          if (_isLoading)
+            const Center(child: CircularProgressIndicator())
+          else if (_error.isNotEmpty)
+            Center(child: Text('Error: $_error'))
+          else
+            ..._news.take(3).map((news) => Column(
+              children: [
+                _buildNewsItem(
+                  title: news.title,
+                  date: _formatDate(news.publishDate),
+                  image: news.imageUrl,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TravelNewsDetailScreen(
+                          title: news.title,
+                          date: _formatDate(news.publishDate),
+                          image: news.imageUrl,
+                          content: news.content ?? '',
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-          _buildNewsItem(
-            title: "\$1 Flight Ticket",
-            date: "Feb 5, 2020",
-            image:
-                "assets/images/explore/TravelNews/cungvanhoathieunhi-danang-vntrip 1 (1).png",
-          ),
-          const SizedBox(height: 16),
-          _buildNewsItem(
-            title: "Visit Korea in this Tet Holiday",
-            date: "Jan 26, 2020",
-            image:
-                "assets/images/explore/TravelNews/cungvanhoathieunhi-danang-vntrip 1 (2).png",
-          ),
+                const SizedBox(height: 16),
+              ],
+            )),
         ],
       ),
     );
+  }
+
+  String _formatDate(String dateString) {
+    try {
+      final date = DateTime.parse(dateString);
+      return '${date.month}/${date.day}/${date.year}';
+    } catch (e) {
+      return dateString;
+    }
   }
 
   Widget _buildNewsItem({
