@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:ktck/api_service.dart';
 import 'package:ktck/mytrip/creaternewtrip/creaternewtrip.dart';
-import 'package:ktck/mytrip/database/trip_database.dart';
 import 'package:ktck/mytrip/models/trip.dart';
 
 class CurrentTripDetailScreen extends StatefulWidget {
@@ -29,7 +29,7 @@ class _CurrentTripDetailScreenState extends State<CurrentTripDetailScreen> {
       ),
     );
     if (changed == true) {
-      final updated = await TripDatabase.instance.readTrip(_trip.id!);
+      final updated = await ApiService.getTripById(_trip.id!);
       if (updated != null && mounted) {
         setState(() => _trip = updated);
       }
@@ -57,9 +57,16 @@ class _CurrentTripDetailScreenState extends State<CurrentTripDetailScreen> {
       },
     );
     if (confirmed == true) {
-      await TripDatabase.instance.delete(_trip.id!);
-      if (!mounted) return;
-      Navigator.pop(context, true);
+      final result = await ApiService.deleteTrip(_trip.id!);
+      if (result['success'] == true) {
+        if (!mounted) return;
+        Navigator.pop(context, true);
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['error']?.toString() ?? 'Failed to delete trip.')),
+        );
+      }
     }
   }
 

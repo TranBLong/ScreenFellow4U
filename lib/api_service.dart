@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:ktck/mytrip/models/trip.dart';
 
 class ApiService {
   // Thay thế bằng địa chỉ IP máy tính của bạn
@@ -264,6 +265,100 @@ class ApiService {
       } else {
         throw Exception('Failed to search tours');
       }
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  // GET trip list
+  static Future<List<Trip>> getTrips({
+    int page = 1,
+    int limit = 100,
+    String search = '',
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/trips?page=$page&limit=$limit&search=$search'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final jsonBody = json.decode(response.body);
+        if (jsonBody is Map && jsonBody['success'] == true && jsonBody['data'] != null) {
+          return (jsonBody['data'] as List)
+              .map((item) => Trip.fromJson(item as Map<String, dynamic>))
+              .toList();
+        }
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // GET trip by ID
+  static Future<Trip?> getTripById(int tripId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/trips/$tripId'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final jsonBody = json.decode(response.body);
+        if (jsonBody is Map && jsonBody['success'] == true && jsonBody['data'] != null) {
+          return Trip.fromJson(jsonBody['data'] as Map<String, dynamic>);
+        }
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // POST a new trip
+  static Future<Map<String, dynamic>> createTrip(Trip trip) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/trips'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(trip.toJson()),
+      );
+
+      return json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  // PUT update existing trip
+  static Future<Map<String, dynamic>> updateTrip(Trip trip) async {
+    try {
+      if (trip.id == null) {
+        return {'success': false, 'error': 'Trip id is required'};
+      }
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/trips/${trip.id}'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(trip.toJson()),
+      );
+
+      return json.decode(response.body);
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  // DELETE trip
+  static Future<Map<String, dynamic>> deleteTrip(int tripId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/trips/$tripId'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      return json.decode(response.body);
     } catch (e) {
       return {'success': false, 'error': e.toString()};
     }

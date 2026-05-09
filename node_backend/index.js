@@ -3,6 +3,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 require('dotenv').config();
 const { connectDB } = require('./config/db');
+const tripRoutes = require('./routes/tripRoutes');
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/tours', require('./routes/tourRoutes'));
 app.use('/api/guides', require('./routes/guideRoutes'));
 app.use('/api/travel-news', require('./routes/travelNewsRoutes'));
+app.use('/api/trips', tripRoutes);
 
 const PORT = process.env.PORT || 5000;
 

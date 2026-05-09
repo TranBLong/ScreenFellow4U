@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ktck/mytrip/database/trip_database.dart';
+import 'package:ktck/api_service.dart';
 import 'package:ktck/mytrip/models/trip.dart';
 
 class _AttractionOption {
@@ -28,6 +28,7 @@ class _CreateNewTripScreenState extends State<CreateNewTripScreen> {
   final _attractionsController = TextEditingController();
   int _travelers = 1;
   final List<String> _selectedAttractions = [];
+  String _selectedTourImageUrl = '';
 
   static const List<_AttractionOption> _attractionOptions = [
     _AttractionOption(
@@ -77,6 +78,7 @@ class _CreateNewTripScreenState extends State<CreateNewTripScreen> {
       _languageController.text = widget.trip!.language;
       _attractionsController.text = widget.trip!.attractions;
       _travelers = widget.trip!.travelers;
+      _selectedTourImageUrl = widget.trip!.coverImageUrl;
       final savedAttractions = widget.trip!.attractions.trim();
       if (savedAttractions.isNotEmpty &&
           savedAttractions != 'No attractions selected') {
@@ -150,6 +152,141 @@ class _CreateNewTripScreenState extends State<CreateNewTripScreen> {
     });
   }
 
+  Future<void> _openTourPicker() async {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.7,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Select a Tour', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: FutureBuilder<Map<String, dynamic>>(
+                  future: ApiService.getAllTours(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator(color: Color(0xFF00C9A7)));
+                    }
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    }
+                    if (snapshot.data?['success'] != true) {
+                      return const Center(child: Text('Failed to load tours'));
+                    }
+                    final List<dynamic> toursData = snapshot.data?['data'] ?? [];
+                    if (toursData.isEmpty) {
+                      return const Center(child: Text('No tours available'));
+                    }
+                    return ListView.builder(
+                      itemCount: toursData.length,
+                      itemBuilder: (context, index) {
+                        final tour = toursData[index];
+                        final title = tour['Title'] ?? 'Unknown Tour';
+                        final imageUrl = tour['CoverImageUrl'] ?? '';
+                        return ListTile(
+                          leading: imageUrl.isNotEmpty
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(6),
+                                  child: Image.network(
+                                    imageUrl,
+                                    width: 48,
+                                    height: 48,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) =>
+                                        const Icon(Icons.map, color: Color(0xFF00C9A7)),
+                                  ),
+                                )
+                              : const Icon(Icons.map, color: Color(0xFF00C9A7)),
+                          title: Text(title),
+                          onTap: () {
+                            setState(() {
+                              _locationController.text = title;
+                              _selectedTourImageUrl = imageUrl;
+                            });
+                            Navigator.pop(context);
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF00C9A7),
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        _dateController.text = "${picked.month.toString().padLeft(2, '0')}/${picked.day.toString().padLeft(2, '0')}/${picked.year.toString().substring(2)}";
+      });
+    }
+  }
+
+  Future<void> _selectTime(TextEditingController controller) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF00C9A7),
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        controller.text = picked.format(context);
+      });
+    }
+  }
+
   Future<void> _saveTrip() async {
     final location = _locationController.text.trim();
     final date = _dateController.text.trim();
@@ -180,16 +317,25 @@ class _CreateNewTripScreenState extends State<CreateNewTripScreen> {
           : attractions,
       status: widget.trip?.status ?? 'Current',
       createdAt: widget.trip?.createdAt ?? DateTime.now().toIso8601String(),
+      coverImageUrl: _selectedTourImageUrl,
     );
 
+    Map<String, dynamic> result;
     if (widget.trip == null) {
-      await TripDatabase.instance.create(trip);
+      result = await ApiService.createTrip(trip);
     } else {
-      await TripDatabase.instance.update(trip);
+      result = await ApiService.updateTrip(trip);
     }
 
-    if (!mounted) return;
-    Navigator.pop(context, true);
+    if (result['success'] == true) {
+      if (!mounted) return;
+      Navigator.pop(context, true);
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['error']?.toString() ?? 'Unable to save trip.')),
+      );
+    }
   }
 
   @override
@@ -231,15 +377,20 @@ class _CreateNewTripScreenState extends State<CreateNewTripScreen> {
                     _buildSectionTitle('Where you want to explore'),
                     _buildTextField(
                       controller: _locationController,
-                      hint: 'Danang, Vietnam',
+                      hint: 'Select a tour',
                       icon: Icons.location_on_outlined,
+                      readOnly: true,
+                      onTap: _openTourPicker,
                     ),
+
                     const SizedBox(height: 24),
                     _buildSectionTitle('Date'),
                     _buildTextField(
                       controller: _dateController,
                       hint: 'mm/dd/yy',
                       icon: Icons.calendar_today_outlined,
+                      readOnly: true,
+                      onTap: _selectDate,
                     ),
                     const SizedBox(height: 24),
                     _buildSectionTitle('Time'),
@@ -250,6 +401,8 @@ class _CreateNewTripScreenState extends State<CreateNewTripScreen> {
                             controller: _fromController,
                             hint: 'From',
                             icon: Icons.access_time,
+                            readOnly: true,
+                            onTap: () => _selectTime(_fromController),
                           ),
                         ),
                         const SizedBox(width: 24),
@@ -258,6 +411,8 @@ class _CreateNewTripScreenState extends State<CreateNewTripScreen> {
                             controller: _toController,
                             hint: 'To',
                             icon: Icons.access_time,
+                            readOnly: true,
+                            onTap: () => _selectTime(_toController),
                           ),
                         ),
                       ],
@@ -377,10 +532,14 @@ class _CreateNewTripScreenState extends State<CreateNewTripScreen> {
     required IconData icon,
     String? suffix,
     TextInputType keyboardType = TextInputType.text,
+    bool readOnly = false,
+    VoidCallback? onTap,
   }) {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
+      readOnly: readOnly,
+      onTap: onTap,
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),

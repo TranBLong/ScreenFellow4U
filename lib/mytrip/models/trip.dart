@@ -10,6 +10,7 @@ class Trip {
   final String attractions;
   final String status;
   final String createdAt;
+  final String coverImageUrl;
 
   Trip({
     this.id,
@@ -23,6 +24,7 @@ class Trip {
     required this.attractions,
     required this.status,
     required this.createdAt,
+    this.coverImageUrl = '',
   });
 
   Trip copyWith({
@@ -37,6 +39,7 @@ class Trip {
     String? attractions,
     String? status,
     String? createdAt,
+    String? coverImageUrl,
   }) {
     return Trip(
       id: id ?? this.id,
@@ -50,6 +53,7 @@ class Trip {
       attractions: attractions ?? this.attractions,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
+      coverImageUrl: coverImageUrl ?? this.coverImageUrl,
     );
   }
 
@@ -66,34 +70,62 @@ class Trip {
       'attractions': attractions,
       'status': status,
       'createdAt': createdAt,
+      'coverImageUrl': coverImageUrl,
       'isDeleted': 0,
     };
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'location': location,
+      'date': date,
+      'timeFrom': timeFrom,
+      'timeTo': timeTo,
+      'travelers': travelers,
+      'fee': fee,
+      'language': language,
+      'attractions': attractions,
+      'status': status,
+      'createdAt': createdAt,
+      'coverImageUrl': coverImageUrl,
+    };
+  }
+
   factory Trip.fromMap(Map<String, dynamic> map) {
-    final idValue = map['id'];
-    final feeValue = map['fee'];
-    final travelersValue = map['travelers'];
+    return Trip.fromJson(map);
+  }
+
+  factory Trip.fromJson(Map<String, dynamic> json) {
+    final idValue = json['id'] ?? json['Id'];
+    final feeValue = json['fee'] ?? json['Fee'];
+    final travelersValue = json['travelers'] ?? json['Travelers'];
+
+    String valueAsString(Map<String, dynamic> source, String lowerKey, String upperKey) {
+      final value = source[lowerKey] ?? source[upperKey];
+      return value == null ? '' : value.toString();
+    }
+
     return Trip(
       id: idValue is int ? idValue : idValue is num ? idValue.toInt() : null,
-      location: map['location'] as String,
-      date: map['date'] as String,
-      timeFrom: map['timeFrom'] as String,
-      timeTo: map['timeTo'] as String,
+      location: valueAsString(json, 'location', 'Location'),
+      date: valueAsString(json, 'date', 'Date'),
+      timeFrom: valueAsString(json, 'timeFrom', 'TimeFrom'),
+      timeTo: valueAsString(json, 'timeTo', 'TimeTo'),
       travelers: travelersValue is int
           ? travelersValue
           : travelersValue is num
               ? travelersValue.toInt()
-              : int.parse(travelersValue.toString()),
+              : int.tryParse(travelersValue.toString()) ?? 0,
       fee: feeValue is int
           ? feeValue.toDouble()
           : feeValue is num
               ? feeValue.toDouble()
-              : double.parse(feeValue.toString()),
-      language: map['language'] as String,
-      attractions: map['attractions'] as String,
-      status: map['status'] as String,
-      createdAt: map['createdAt'] as String,
+              : double.tryParse(feeValue.toString()) ?? 0.0,
+      language: valueAsString(json, 'language', 'Language'),
+      attractions: valueAsString(json, 'attractions', 'Attractions'),
+      status: valueAsString(json, 'status', 'Status'),
+      createdAt: valueAsString(json, 'createdAt', 'CreatedAt'),
+      coverImageUrl: valueAsString(json, 'coverImageUrl', 'CoverImageUrl'),
     );
   }
 }

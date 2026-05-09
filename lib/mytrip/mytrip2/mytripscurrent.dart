@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:ktck/api_service.dart';
 import 'package:ktck/login/explore/explore.dart';
 import 'package:ktck/mytrip/creaternewtrip/creaternewtrip.dart';
 import 'package:ktck/mytrip/curreenttripdetail/curreenttripdetail.dart';
-import 'package:ktck/mytrip/database/trip_database.dart';
 import 'package:ktck/mytrip/models/trip.dart';
 import 'package:ktck/mytrip/mytrip2/mytripsnext.dart';
 import 'package:ktck/mytrip/mytrip2/mytripspast.dart';
@@ -35,7 +35,9 @@ class _MyTripsCurrentState extends State<MyTripsCurrent> {
 
   Future<void> _refreshTrips() async {
     setState(() => _isLoading = true);
-    _trips = await TripDatabase.instance.readAllTrips();
+    _trips = await ApiService.getTrips(limit: 100);
+    // Sắp xếp chuyến đi mới nhất lên đầu để lấy ảnh background
+    _trips.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     if (mounted) {
       setState(() => _isLoading = false);
     }
@@ -63,12 +65,19 @@ class _MyTripsCurrentState extends State<MyTripsCurrent> {
     );
 
     if (confirmed == true) {
-      await TripDatabase.instance.delete(trip.id!);
-      await _refreshTrips();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Trip deleted successfully.')),
-      );
+      final result = await ApiService.deleteTrip(trip.id!);
+      if (result['success'] == true) {
+        await _refreshTrips();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Trip deleted successfully.')),
+        );
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['error']?.toString() ?? 'Failed to delete trip.')),
+        );
+      }
     }
   }
 
@@ -82,6 +91,16 @@ class _MyTripsCurrentState extends State<MyTripsCurrent> {
     if (changed == true) {
       await _refreshTrips();
     }
+  }
+
+  String? _getHeaderImageUrl() {
+    for (final trip in _trips) {
+      final imageUrl = trip.coverImageUrl.trim();
+      if (imageUrl.isNotEmpty) {
+        return imageUrl;
+      }
+    }
+    return null;
   }
 
   @override
@@ -144,60 +163,76 @@ class _MyTripsCurrentState extends State<MyTripsCurrent> {
   }
 
   Widget _buildHeader() {
-    return Container(
+    final headerImageUrl = _getHeaderImageUrl();
+    final hasImage = headerImageUrl != null;
+    
+    return SizedBox(
       height: 160,
       width: double.infinity,
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/images/explore/image 3.png'),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.black.withOpacity(0.3),
-              Colors.black.withOpacity(0.1),
-            ],
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (hasImage)
+            Image.network(
+              headerImageUrl!,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Image.asset(
+                'assets/images/explore/image 3.png',
+                fit: BoxFit.cover,
+              ),
+            )
+          else
+            Image.asset(
+              'assets/images/explore/image 3.png',
+              fit: BoxFit.cover,
+            ),
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withOpacity(0.3),
+                  Colors.black.withOpacity(0.1),
+                ],
+              ),
+            ),
+            padding: const EdgeInsets.only(
+              top: 48,
+              left: 20,
+              right: 20,
+              bottom: 16,
+            ),
+            child: Stack(
+              children: [
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'My Trips',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.topRight,
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.25),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.search, color: Colors.white, size: 20),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        padding: const EdgeInsets.only(
-          top: 48,
-          left: 20,
-          right: 20,
-          bottom: 16,
-        ),
-        child: Stack(
-          children: [
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'My Trips',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-            Align(
-              alignment: Alignment.topRight,
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.25),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.search, color: Colors.white, size: 20),
-              ),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -295,17 +330,30 @@ class _MyTripsCurrentState extends State<MyTripsCurrent> {
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(16),
               ),
-              child: Image.asset(
-                'assets/images/mytrip/mytripcurrent/dragon-bridge-03 2.png',
-                height: 160,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  height: 160,
-                  color: Colors.grey[300],
-                  child: const Icon(Icons.image, size: 60, color: Colors.white),
-                ),
-              ),
+              child: trip.coverImageUrl.isNotEmpty
+                  ? Image.network(
+                      trip.coverImageUrl,
+                      height: 160,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Image.asset(
+                        'assets/images/mytrip/mytripcurrent/dragon-bridge-03 2.png',
+                        height: 160,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  : Image.asset(
+                      'assets/images/mytrip/mytripcurrent/dragon-bridge-03 2.png',
+                      height: 160,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        height: 160,
+                        color: Colors.grey[300],
+                        child: const Icon(Icons.image, size: 60, color: Colors.white),
+                      ),
+                    ),
             ),
             Padding(
               padding: const EdgeInsets.all(16),
