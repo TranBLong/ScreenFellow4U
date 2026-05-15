@@ -200,8 +200,8 @@ class _CreateNewTripScreenState extends State<CreateNewTripScreen> {
                       itemCount: toursData.length,
                       itemBuilder: (context, index) {
                         final tour = toursData[index];
-                        final title = tour['Title'] ?? 'Unknown Tour';
-                        final imageUrl = tour['CoverImageUrl'] ?? '';
+                        final title = tour['Title'] ?? tour['title'] ?? tour['Location'] ?? tour['location'] ?? 'Unknown Tour';
+                        final imageUrl = tour['CoverImageUrl'] ?? tour['coverImageUrl'] ?? tour['ImageUrl'] ?? tour['imageUrl'] ?? tour['image'] ?? '';
                         return ListTile(
                           leading: imageUrl.isNotEmpty
                               ? ClipRRect(
@@ -382,6 +382,10 @@ class _CreateNewTripScreenState extends State<CreateNewTripScreen> {
                       readOnly: true,
                       onTap: _openTourPicker,
                     ),
+                    if (_selectedTourImageUrl.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      _buildTourPreview(_selectedTourImageUrl),
+                    ],
 
                     const SizedBox(height: 24),
                     _buildSectionTitle('Date'),
@@ -581,6 +585,33 @@ class _CreateNewTripScreenState extends State<CreateNewTripScreen> {
         ),
         child: Icon(icon, color: const Color(0xFF00C9A7), size: 24),
       ),
+    );
+  }
+
+  Widget _buildTourPreview(String imageUrl) {
+    if (imageUrl.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final widget = imageUrl.startsWith('http')
+        ? Image.network(
+            imageUrl,
+            fit: BoxFit.cover,
+          )
+        : Image.asset(
+            imageUrl,
+            fit: BoxFit.cover,
+          );
+
+    return Container(
+      height: 160,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: Colors.grey[100],
+      ),
+      clipBehavior: Clip.hardEdge,
+      child: widget,
     );
   }
 

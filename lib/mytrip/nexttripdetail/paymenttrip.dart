@@ -329,8 +329,8 @@ class PaymentTripScreen extends StatelessWidget {
                               ),
                               backgroundColor: const Color(0xFF00C9A7),
                               behavior: SnackBarBehavior.floating,
-                              margin: EdgeInsets.only(
-                                bottom: screenHeight - 250, // Đẩy lên đỉnh màn hình
+                              margin: const EdgeInsets.only(
+                                bottom: 20,
                                 left: 20,
                                 right: 20,
                               ),

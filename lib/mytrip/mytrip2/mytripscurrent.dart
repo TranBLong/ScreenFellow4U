@@ -27,6 +27,29 @@ class _MyTripsCurrentState extends State<MyTripsCurrent> {
     'Wish List',
   ];
 
+  /// Parse date from format MM/dd/yy
+  DateTime? _parseDate(String dateStr) {
+    try {
+      final parts = dateStr.split('/');
+      if (parts.length != 3) return null;
+      final month = int.parse(parts[0]);
+      final day = int.parse(parts[1]);
+      final year = 2000 + int.parse(parts[2]);
+      return DateTime(year, month, day);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  bool _isToday(Trip trip) {
+    final tripDate = _parseDate(trip.date);
+    if (tripDate == null) return false;
+    final now = DateTime.now();
+    return tripDate.year == now.year &&
+        tripDate.month == now.month &&
+        tripDate.day == now.day;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -35,9 +58,10 @@ class _MyTripsCurrentState extends State<MyTripsCurrent> {
 
   Future<void> _refreshTrips() async {
     setState(() => _isLoading = true);
-    _trips = await ApiService.getTrips(limit: 100);
-    // Sắp xếp chuyến đi mới nhất lên đầu để lấy ảnh background
-    _trips.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final all = await ApiService.getTrips(limit: 100);
+    all.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    // Only show trips whose date is today
+    _trips = all.where(_isToday).toList();
     if (mounted) {
       setState(() => _isLoading = false);
     }
@@ -129,11 +153,7 @@ class _MyTripsCurrentState extends State<MyTripsCurrent> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _openForm(),
-        backgroundColor: const Color(0xFF00BFA5),
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
-      ),
+
       bottomNavigationBar: _buildBottomNav(),
     );
   }
@@ -177,13 +197,13 @@ class _MyTripsCurrentState extends State<MyTripsCurrent> {
               headerImageUrl!,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) => Image.asset(
-                'assets/images/explore/image 3.png',
+                'assets/images/explore/FeaturedTours/HaLongBay.png',
                 fit: BoxFit.cover,
               ),
             )
           else
             Image.asset(
-              'assets/images/explore/image 3.png',
+              'assets/images/explore/FeaturedTours/HaLongBay.png',
               fit: BoxFit.cover,
             ),
           Container(
@@ -337,14 +357,14 @@ class _MyTripsCurrentState extends State<MyTripsCurrent> {
                       width: double.infinity,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Image.asset(
-                        'assets/images/mytrip/mytripcurrent/dragon-bridge-03 2.png',
+                        'assets/images/explore/FeaturedTours/HaLongBay.png',
                         height: 160,
                         width: double.infinity,
                         fit: BoxFit.cover,
                       ),
                     )
                   : Image.asset(
-                      'assets/images/mytrip/mytripcurrent/dragon-bridge-03 2.png',
+                      'assets/images/explore/FeaturedTours/HaLongBay.png',
                       height: 160,
                       width: double.infinity,
                       fit: BoxFit.cover,

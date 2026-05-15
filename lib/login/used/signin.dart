@@ -24,8 +24,8 @@ class _SignInState extends State<SignIn> {
         SnackBar(
           content: const Text("Please enter email and password"),
           behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.only(
-            bottom: MediaQuery.of(context).size.height - 100,
+          margin: const EdgeInsets.only(
+            bottom: 20,
             left: 20,
             right: 20,
           ),
@@ -49,8 +49,8 @@ class _SignInState extends State<SignIn> {
         SnackBar(
           content: Text(result['message']),
           behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.only(
-            bottom: MediaQuery.of(context).size.height - 100,
+          margin: const EdgeInsets.only(
+            bottom: 20,
             left: 20,
             right: 20,
           ),
@@ -67,8 +67,8 @@ class _SignInState extends State<SignIn> {
         SnackBar(
           content: Text(result['message']),
           behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.only(
-            bottom: MediaQuery.of(context).size.height - 100,
+          margin: const EdgeInsets.only(
+            bottom: 20,
             left: 20,
             right: 20,
           ),

@@ -4,6 +4,9 @@ import 'package:ktck/mytrip/mytrip2/mytripscurrent.dart';
 import 'package:ktck/mytrip/mytrip2/mytripsnext.dart';
 import 'package:ktck/mytrip/mytrip2/mytripspast.dart';
 import 'package:ktck/mytrip/creaternewtrip/creaternewtrip.dart';
+import 'package:ktck/api_service.dart';
+import 'package:ktck/mytrip/models/trip.dart';
+import 'package:ktck/mytrip/curreenttripdetail/curreenttripdetail.dart';
 
 class MyTripsWishlist extends StatefulWidget {
   const MyTripsWishlist({super.key});
@@ -15,38 +18,87 @@ class MyTripsWishlist extends StatefulWidget {
 class _MyTripsWishlistScreenState extends State<MyTripsWishlist> {
   int _selectedTab = 3; // Wish List selected
   int _selectedNavIndex = 1;
+  List<Trip> _trips = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshTrips();
+  }
+
+  Future<void> _refreshTrips() async {
+    _trips = await ApiService.getTrips(limit: 100);
+    _trips.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _confirmDelete(Trip trip) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete trip'),
+          content: const Text('Are you sure you want to delete this trip?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      final result = await ApiService.deleteTrip(trip.id!);
+      if (result['success'] == true) {
+        await _refreshTrips();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Trip deleted successfully.')),
+        );
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['error']?.toString() ?? 'Failed to delete trip.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _openForm([Trip? trip]) async {
+    final changed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreateNewTripScreen(trip: trip),
+      ),
+    );
+    if (changed == true) {
+      await _refreshTrips();
+    }
+  }
+
+  String? _getHeaderImageUrl() {
+    for (final trip in _trips) {
+      final imageUrl = trip.coverImageUrl.trim();
+      if (imageUrl.isNotEmpty) {
+        return imageUrl;
+      }
+    }
+    return null;
+  }
 
   final List<String> _tabs = [
     'Current Trips',
     'Next Trips',
     'Past Trips',
     'Wish List',
-  ];
-
-  final List<Map<String, dynamic>> _wishlist = [
-    {
-      'title': 'Melbourne – Sydney',
-      'image': 'assets/images/explore/FeaturedTours/199641361 1 (1).png',
-      'date': 'Jan 30, 2020',
-      'duration': '3 days',
-      'price': '\$600.00',
-      'rating': 4,
-      'likes': '1247 likes',
-      'liked': true,
-      'bookmarked': false,
-    },
-    {
-      'title': 'Hanoi – Ha Long Bay',
-      'image':
-          'assets/images/explore/FeaturedTours/halong-bay-vietnam-from-above-gettyimages 1.png',
-      'date': 'Jan 30, 2020',
-      'duration': '3 days',
-      'price': '\$300.00',
-      'rating': 4,
-      'likes': '1247 likes',
-      'liked': false,
-      'bookmarked': false,
-    },
   ];
 
   @override
@@ -60,22 +112,17 @@ class _MyTripsWishlistScreenState extends State<MyTripsWishlist> {
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
-              itemCount: _wishlist.length,
+              itemCount: _trips.length,
               itemBuilder: (context, index) => Padding(
                 padding: const EdgeInsets.only(bottom: 16),
-                child: _buildWishCard(index),
+                child: _buildTripCard(_trips[index]),
               ),
             ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const CreateNewTripScreen()),
-          );
-        },
+        onPressed: () => _openForm(),
         backgroundColor: const Color(0xFF00BFA5),
         child: const Icon(Icons.add, color: Colors.white, size: 28),
       ),
@@ -84,60 +131,76 @@ class _MyTripsWishlistScreenState extends State<MyTripsWishlist> {
   }
 
   Widget _buildHeader() {
-    return Container(
+    final headerImageUrl = _getHeaderImageUrl();
+    final hasImage = headerImageUrl != null;
+    
+    return SizedBox(
       height: 160,
       width: double.infinity,
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/images/explore/image 3.png'),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.black.withOpacity(0.35),
-              Colors.black.withOpacity(0.1),
-            ],
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (hasImage)
+            Image.network(
+              headerImageUrl!,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Image.asset(
+                'assets/images/explore/FeaturedTours/HaLongBay.png',
+                fit: BoxFit.cover,
+              ),
+            )
+          else
+            Image.asset(
+              'assets/images/explore/FeaturedTours/HaLongBay.png',
+              fit: BoxFit.cover,
+            ),
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withOpacity(0.3),
+                  Colors.black.withOpacity(0.1),
+                ],
+              ),
+            ),
+            padding: const EdgeInsets.only(
+              top: 48,
+              left: 20,
+              right: 20,
+              bottom: 16,
+            ),
+            child: Stack(
+              children: [
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'My Trips',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.topRight,
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.25),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.search, color: Colors.white, size: 20),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        padding: const EdgeInsets.only(
-          top: 48,
-          left: 20,
-          right: 20,
-          bottom: 16,
-        ),
-        child: Stack(
-          children: [
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'My Trips',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-            Align(
-              alignment: Alignment.topRight,
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.25),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.search, color: Colors.white, size: 20),
-              ),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -203,9 +266,20 @@ class _MyTripsWishlistScreenState extends State<MyTripsWishlist> {
     );
   }
 
-  Widget _buildWishCard(int index) {
-    final trip = _wishlist[index];
-    return Container(
+  Widget _buildTripCard(Trip trip) {
+    return GestureDetector(
+      onTap: () async {
+        final changed = await Navigator.push<bool>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => CurrentTripDetailScreen(trip: trip),
+          ),
+        );
+        if (changed == true) {
+          await _refreshTrips();
+        }
+      },
+      child: Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -220,99 +294,74 @@ class _MyTripsWishlistScreenState extends State<MyTripsWishlist> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image with rating overlay
-          Stack(
-            children: [
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(16),
                 ),
-                child: Image.asset(
-                  trip['image'],
+              child: trip.coverImageUrl.isNotEmpty
+                  ? Image.network(
+                      trip.coverImageUrl,
                   height: 160,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => Container(
+                      errorBuilder: (context, error, stackTrace) => Image.asset(
+                        'assets/images/explore/FeaturedTours/HaLongBay.png',
                     height: 160,
-                    color: Colors.teal[100],
-                    child: const Icon(
-                      Icons.image,
-                      size: 50,
-                      color: Colors.white,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                    ),
+                    )
+                  : Image.asset(
+                      'assets/images/explore/FeaturedTours/HaLongBay.png',
+                      height: 160,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        height: 160,
+                        color: Colors.grey[300],
+                        child: const Icon(Icons.image, size: 60, color: Colors.white),
                     ),
                   ),
                 ),
-              ),
-              // Rating bar bottom-left
-              Positioned(
-                bottom: 10,
-                left: 12,
-                child: _buildRatingBar(trip['rating'], trip['likes']),
-              ),
-              // Bookmark icon top-right
-              Positioned(
-                top: 10,
-                right: 12,
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _wishlist[index]['bookmarked'] =
-                          !_wishlist[index]['bookmarked'];
-                    });
-                  },
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      trip['bookmarked']
-                          ? Icons.bookmark
-                          : Icons.bookmark_border,
-                      size: 18,
-                      color: const Color(0xFF00CEA6),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // Card body
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+              padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title row with heart
                 Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: Text(
-                        trip['title'],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              trip.location,
                         style: const TextStyle(
-                          fontSize: 15,
+                                fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
                         ),
                       ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _wishlist[index]['liked'] =
-                              !_wishlist[index]['liked'];
-                        });
-                      },
-                      child: Icon(
-                        trip['liked'] ? Icons.favorite : Icons.favorite_border,
-                        color: trip['liked']
-                            ? const Color(0xFF00CEA6)
-                            : Colors.grey[400],
-                        size: 22,
+                            const SizedBox(height: 8),
+                            Text(
+                              '${trip.date} • ${trip.timeFrom} - ${trip.timeTo}',
+                              style: TextStyle(color: Colors.grey[600]),
+                            ),
+                          ],
+                        ),
                       ),
+                      Column(
+                        children: [
+                          IconButton(
+                            onPressed: () => _openForm(trip),
+                            icon: const Icon(Icons.edit, color: Color(0xFF00C9A7)),
+                          ),
+                          IconButton(
+                            onPressed: () => _confirmDelete(trip),
+                            icon: const Icon(Icons.delete, color: Colors.redAccent),
+                      ),
+                        ],
                     ),
                   ],
                 ),
@@ -327,39 +376,35 @@ class _MyTripsWishlistScreenState extends State<MyTripsWishlist> {
                     ),
                     const SizedBox(width: 5),
                     Text(
-                      trip['date'],
+                      trip.date,
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                // Duration + Price row
+                  const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.access_time,
-                          size: 14,
-                          color: Colors.grey[500],
+                      Text(
+                        '\$${trip.fee.toStringAsFixed(0)}',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF00C9A7),
                         ),
-                        const SizedBox(width: 5),
-                        Text(
-                          trip['duration'],
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                      ],
-                    ),
-                    Text(
-                      trip['price'],
+                        child: Text(
+                          trip.status,
                       style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF00BFA5),
+                            color: Color(0xFF00C9A7),
+                            fontWeight: FontWeight.w600,
+                          ),
                       ),
                     ),
                   ],
@@ -369,37 +414,6 @@ class _MyTripsWishlistScreenState extends State<MyTripsWishlist> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildRatingBar(int rating, String likes) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.45),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Stars
-          ...List.generate(5, (i) {
-            return Icon(
-              i < rating ? Icons.star : Icons.star_border,
-              color: Colors.amber,
-              size: 14,
-            );
-          }),
-          const SizedBox(width: 6),
-          Text(
-            likes,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
       ),
     );
   }

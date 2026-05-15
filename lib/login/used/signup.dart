@@ -31,8 +31,8 @@ class _SignUpState extends State<SignUp> {
         SnackBar(
           content: const Text("Please fill in all required fields"),
           behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.only(
-            bottom: MediaQuery.of(context).size.height - 100,
+          margin: const EdgeInsets.only(
+            bottom: 20,
             left: 20,
             right: 20,
           ),
@@ -46,8 +46,8 @@ class _SignUpState extends State<SignUp> {
         SnackBar(
           content: const Text("Passwords do not match"),
           behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.only(
-            bottom: MediaQuery.of(context).size.height - 100,
+          margin: const EdgeInsets.only(
+            bottom: 20,
             left: 20,
             right: 20,
           ),
@@ -75,8 +75,8 @@ class _SignUpState extends State<SignUp> {
         SnackBar(
           content: Text(result['message']),
           behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.only(
-            bottom: MediaQuery.of(context).size.height - 100,
+          margin: const EdgeInsets.only(
+            bottom: 20,
             left: 20,
             right: 20,
           ),
@@ -93,8 +93,8 @@ class _SignUpState extends State<SignUp> {
         SnackBar(
           content: Text(result['message']),
           behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.only(
-            bottom: MediaQuery.of(context).size.height - 100,
+          margin: const EdgeInsets.only(
+            bottom: 20,
             left: 20,
             right: 20,
           ),

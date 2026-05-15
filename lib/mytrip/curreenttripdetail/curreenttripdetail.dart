@@ -15,6 +15,17 @@ class CurrentTripDetailScreen extends StatefulWidget {
 class _CurrentTripDetailScreenState extends State<CurrentTripDetailScreen> {
   late Trip _trip;
 
+  static const Map<String, String> _locationCoverAssets = {
+    'Bali': 'assets/images/explore/FeaturedTours/Bali.png',
+    'Ha Long Bay': 'assets/images/explore/FeaturedTours/HaLongBay.png',
+    'Nha Trang': 'assets/images/explore/FeaturedTours/NhaTrang.png',
+    'My Khe Beach': 'assets/images/chooseaguide/main/nhom1/myKhe_beach_main.png',
+    'War Museum': 'assets/images/chooseaguide/main/nhom1/war_museum_main.png',
+    'Hoi An': 'assets/images/chooseaguide/main/nhom1/hoianvietnam 1.png',
+    'Marble Mountain': 'assets/images/chooseaguide/main/nhom2/marble_mountain_main.png',
+    'Mekong Delta': 'assets/images/chooseaguide/main/nhom2/mekong_delta_main.png',
+  };
+
   @override
   void initState() {
     super.initState();
@@ -64,7 +75,12 @@ class _CurrentTripDetailScreenState extends State<CurrentTripDetailScreen> {
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['error']?.toString() ?? 'Failed to delete trip.')),
+          SnackBar(
+            behavior: SnackBarBehavior.fixed,
+            content: Text(
+              result['error']?.toString() ?? 'Failed to delete trip.',
+            ),
+          ),
         );
       }
     }
@@ -124,21 +140,7 @@ class _CurrentTripDetailScreenState extends State<CurrentTripDetailScreen> {
                             borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(16),
                             ),
-                            child: Image.asset(
-                              'assets/images/mytrip/mytripcurrent/dragon-bridge-03 2.png',
-                              height: 180,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => Container(
-                                height: 180,
-                                color: Colors.orange[200],
-                                child: const Icon(
-                                  Icons.image,
-                                  size: 60,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
+                            child: _buildCoverImage(_trip.coverImageUrl),
                           ),
                           Positioned(
                             bottom: 0,
@@ -162,12 +164,12 @@ class _CurrentTripDetailScreenState extends State<CurrentTripDetailScreen> {
                             bottom: 12,
                             left: 16,
                             child: Row(
-                              children: const [
-                                Icon(Icons.location_on, color: Colors.white, size: 16),
-                                SizedBox(width: 4),
+                              children: [
+                                const Icon(Icons.location_on, color: Colors.white, size: 16),
+                                const SizedBox(width: 4),
                                 Text(
-                                  'Danang, Vietnam',
-                                  style: TextStyle(
+                                  _trip.location.isNotEmpty ? _trip.location : 'Unknown location',
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 13,
                                     fontWeight: FontWeight.w500,
@@ -176,28 +178,10 @@ class _CurrentTripDetailScreenState extends State<CurrentTripDetailScreen> {
                               ],
                             ),
                           ),
-                          Positioned(
-                            bottom: -24,
-                            right: 24,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: const Color(0xFF00C9A7),
-                                  width: 3,
-                                ),
-                              ),
-                              child: const CircleAvatar(
-                                radius: 32,
-                                backgroundImage: AssetImage(
-                                  'assets/images/explore/BestGuides/Emmy 1.png',
-                                ),
-                              ),
-                            ),
-                          ),
+
                         ],
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 16),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Column(
@@ -327,6 +311,78 @@ class _CurrentTripDetailScreenState extends State<CurrentTripDetailScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  String _getFallbackImageUrl() {
+    final locationFallback = _locationCoverAssets[_trip.location];
+    if (locationFallback != null) {
+      return locationFallback;
+    }
+
+    final attractions = _trip.attractions
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+        
+    for (final attraction in attractions) {
+      final attractionFallback = _locationCoverAssets[attraction];
+      if (attractionFallback != null) {
+        return attractionFallback;
+      }
+    }
+
+    return 'assets/images/mytrip/mytripcurrent/dragon-bridge-03 2.png';
+  }
+
+  Widget _buildCoverImage(String imageUrl) {
+    final fallbackUrl = _getFallbackImageUrl();
+
+    Widget buildFallback(BuildContext context, Object error, StackTrace? stackTrace) {
+      return Image.asset(
+        fallbackUrl,
+        height: 180,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          height: 180,
+          color: Colors.orange[200],
+          child: const Icon(
+            Icons.image,
+            size: 60,
+            color: Colors.white,
+          ),
+        ),
+      );
+    }
+
+    if (imageUrl.isNotEmpty) {
+      if (imageUrl.startsWith('http')) {
+        return Image.network(
+          imageUrl,
+          height: 180,
+          width: double.infinity,
+          fit: BoxFit.cover,
+          errorBuilder: buildFallback,
+        );
+      }
+
+      return Image.asset(
+        imageUrl,
+        height: 180,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: buildFallback,
+      );
+    }
+
+    return Image.asset(
+      fallbackUrl,
+      height: 180,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      errorBuilder: buildFallback,
     );
   }
 
